@@ -16,7 +16,7 @@ function SocialLinks({ location }: { location: 'header' | 'footer' }) {
   const footer = location === 'footer'
   const visibleLinks = footer
     ? [...links, { label: 'Email', href: 'mailto:tusharimran092@gmail.com' }]
-    : [{ label: 'Works', href: '#works' }, { label: 'Pricing', href: '#pricing' }]
+    : [{ label: 'Projects', href: '#works' }, { label: 'Pricing', href: '#pricing' }]
 
   return (
     <nav className={footer ? 'social-links social-links--footer' : 'social-links'} aria-label={`${location} social links`}>
@@ -63,7 +63,7 @@ function Profile() {
       <main className="profile-content">
         <section className="intro" aria-labelledby="name">
           <div className="identity">
-            <img className="avatar" src="/assets/headshot.jpg" alt="Tushar Imran" />
+            <img className="avatar" src="/assets/headshot.png" alt="Tushar Imran" />
             <div>
               <h1 id="name">Tushar Imran</h1>
               <p>Software Designer</p>
