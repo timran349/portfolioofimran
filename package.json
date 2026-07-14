@@ -9,8 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
+    "@calcom/embed-react": "^1.5.3",
     "@tailwindcss/vite": "latest",
+    "@vitejs/plugin-react": "latest",
     "framer-motion": "latest",
     "react": "latest",
     "react-dom": "latest",

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useAnimationFrame, useReducedMotion } from 'framer-motion'
+import { getCalApi } from "@calcom/embed-react";
 
 const links = [
   { label: 'Dribbble', href: 'https://dribbble.com/timran' },
@@ -16,7 +17,7 @@ function SocialLinks({ location }: { location: 'header' | 'footer' }) {
   const footer = location === 'footer'
   const visibleLinks = footer
     ? [...links, { label: 'Email', href: 'mailto:tusharimran092@gmail.com' }]
-    : [{ label: 'Projects', href: '#works' }, { label: 'Pricing', href: '#pricing' }]
+    : [{ label: 'Projects', href: '#works' }, { label: 'Pricing', href: '#pricing' }, { label: 'Resume', href: '#resume' }]
 
   return (
     <nav className={footer ? 'social-links social-links--footer' : 'social-links'} aria-label={`${location} social links`}>
@@ -41,15 +42,37 @@ function GoogleMeetIcon() {
   )
 }
 
-function ActionButton({ kind, children }: { kind: 'call' | 'message'; children: string }) {
-  const href = kind === 'call' ? '#contact' : 'https://wa.me/'
+function ActionButton({
+  kind,
+  children,
+}: {
+  kind: "call" | "message";
+  children: string;
+}) {
+  if (kind === "call") {
+    return (
+      <button
+        className="action-button"
+        data-cal-link="https://cal.com/timran/meeting-with-imran"
+        data-cal-config='{"layout":"month_view"}'
+      >
+        <GoogleMeetIcon />
+        <span>{children}</span>
+      </button>
+    );
+  }
 
   return (
-    <a className="action-button" href={href}>
-      {kind === 'call' ? <GoogleMeetIcon /> : <img src="/assets/social-icon.svg" alt="" aria-hidden="true" />}
+    <a
+      className="action-button"
+      href="https://wa.me/+88001826381938"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <img src="/assets/social-icon.svg" alt="" aria-hidden="true" />
       <span>{children}</span>
     </a>
-  )
+  );
 }
 
 function Profile() {
@@ -118,6 +141,12 @@ function App() {
   const offset = useRef(0)
   const [loopHeight, setLoopHeight] = useState(0)
   const [translateY, setTranslateY] = useState(0)
+  useEffect(() => {
+  (async () => {
+    const cal = await getCalApi();
+    cal("ui", {});
+  })();
+}, []);
 
   const normalizeOffset = (value: number) => {
     if (!loopHeight) return value
