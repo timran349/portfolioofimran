@@ -120,11 +120,11 @@ function Profile() {
           <div className="identity">
             <img
               className="avatar"
-              src="/assets/headshot.png"
+              src="/assets/headshot.png?v=2"
               alt="Tushar Imran"
               width={96}
               height={96}
-              srcSet="/assets/headshot.png 1x, /assets/headshot.png 2x"
+              srcSet="/assets/headshot.png?v=2 1x, /assets/headshot.png?v=2 2x"
             />
             <div>
               <h1 id="name">Tushar Imran</h1>
@@ -133,7 +133,7 @@ function Profile() {
           </div>
 
           <div className="summary">
-            <p>Hey I’m Imran, a software designer and creator based in Bangladesh. For over 5 years, I’ve helped founders and teams around the world to create experiences that are both beautiful and genuinely useful.</p>
+            <p>Hey I’m Imran, a software designer and creator based in Bangladesh. For over 5 years, I’ve helped founders and teams around the world to create user experiences that are both beautiful and genuinely useful.</p>
             <div className="actions" id="contact">
               <ActionButton kind="call">Book a Call</ActionButton>
               <ActionButton kind="message">Message Me</ActionButton>
