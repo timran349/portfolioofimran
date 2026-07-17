@@ -2,18 +2,17 @@ import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useAnimationFrame, useReducedMotion } from 'framer-motion'
 import { getCalApi } from '@calcom/embed-react'
 
-type Page = 'home' | 'pricing'
-type PricingTab = 'landing' | 'app' | 'custom'
-type ThemeMode = 'light' | 'dark'
+type SocialLink = { label: string; href: string; download?: string }
+const footerLinks: SocialLink[] = [
+  { label: 'Dribbble', href: 'https://dribbble.com/timran' },
+  { label: 'Email', href: 'mailto:tusharimran092@gmail.com' },
+  { label: 'Resume', href: '/assets/Resume of Tushar.pdf', download: 'Resume of Tushar.pdf' },
+]
+
 type PortfolioProject = {
   title: string
   image: string
 }
-
-const links = [
-  { label: 'Dribbble', href: 'https://dribbble.com/timran' },
-  { label: 'X', href: 'https://x.com/Imranio' },
-]
 
 const projects: PortfolioProject[] = [
   { title: 'Founders Mine App', image: '/assets/1 Founders Mine App.png' },
@@ -27,21 +26,6 @@ const projects: PortfolioProject[] = [
   { title: 'Skill-Up Learning App', image: '/assets/9 Skill-Up Learning App.png' },
 ]
 
-const pricingTabs: Array<{ id: PricingTab; label: string }> = [
-  { id: 'landing', label: 'Landing Page' },
-  { id: 'app', label: 'Full App Design' },
-  { id: 'custom', label: 'Custom' },
-]
-
-type PricingCard = {
-  title: string
-  subtitle: string
-  included: string[]
-  tags: string[]
-  price?: string
-  priceLabel?: string
-}
-
 function Container({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div className={`mx-auto w-full max-w-[1350px] px-6 lg:px-8 ${className}`.trim()}>
@@ -50,68 +34,16 @@ function Container({ children, className = '' }: { children: ReactNode; classNam
   )
 }
 
-const pricingContent: Record<PricingTab, PricingCard> = {
-  landing: {
-    title: 'Landing Page Design',
-    price: '$999',
-    subtitle: 'Perfect for startups, SaaS products and businesses launching online.',
-    included: [
-      'Desktop & Mobile Responsive',
-      'Custom UI Design',
-      'Figma Source File',
-      'Up to 5 Pages',
-      'Unlimited Revisions',
-      'Delivery in 7–10 Days',
-    ],
-    tags: ['Landing Page', 'SaaS', 'Startup', 'Portfolio', 'Agency', 'Marketing'],
-  },
-  app: {
-    title: 'Full Product Design',
-    price: '$2,000',
-    subtitle: 'Complete UX/UI design for web or mobile products.',
-    included: [
-      'UX Research',
-      'User Flow',
-      'Wireframes',
-      'Design System',
-      'Desktop & Mobile',
-      'Unlimited Revisions',
-      'Developer Handoff',
-    ],
-    tags: ['SaaS', 'Dashboard', 'Mobile App', 'Web App', 'CRM', 'AI'],
-  },
-  custom: {
-    title: 'Custom Project',
-    priceLabel: 'Estimated Budget',
-    subtitle: 'Tell me your budget and project details. I’ll prepare a custom proposal within 24 hours.',
-    included: ['Flexible Scope', 'Unlimited Revisions', 'Tailored Timeline'],
-    tags: ['Strategy', 'Product', 'Brand', 'Experiments'],
-  },
-}
-
-function SocialLinks({ location, activePage, onNavigate }: { location: 'header' | 'footer'; activePage: Page; onNavigate: (page: Page, hash: string) => void }) {
-  const footer = location === 'footer'
-  const visibleLinks: Array<{ label: string; href: string; page?: Page }> = footer
-    ? [...links, { label: 'Email', href: 'mailto:tusharimran092@gmail.com' }]
-    : [
-        { label: 'Projects', href: '#works', page: 'home' as const },
-        { label: 'Pricing', href: '#pricing', page: 'pricing' as const },
-        { label: 'Resume', href: '#resume', page: 'home' as const },
-      ]
-
+function SocialLinks() {
   return (
-    <nav className={footer ? 'social-links social-links--footer' : 'social-links'} aria-label={`${location} social links`}>
-      {visibleLinks.map(({ label, href, page }) => (
+    <nav className="social-links social-links--footer" aria-label="footer social links">
+      {footerLinks.map(({ label, href, download }) => (
         <a
           key={label}
           href={href}
-          className={activePage === page && location !== 'footer' ? 'is-active' : ''}
-          onClick={(event) => {
-            event.preventDefault()
-            if (page) {
-              onNavigate(page, href)
-            }
-          }}
+          target={href.startsWith('http') ? '_blank' : undefined}
+          rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+          download={download}
         >
           {label}
         </a>
@@ -120,16 +52,12 @@ function SocialLinks({ location, activePage, onNavigate }: { location: 'header' 
   )
 }
 
-function TopNav({ activePage, onNavigate }: { activePage: Page; onNavigate: (page: Page, hash: string) => void }) {
+function TopNav() {
   return (
     <div className="profile-header">
-      <a className="wordmark" href="#top" aria-label="Tushar Imran home" onClick={(event) => {
-        event.preventDefault()
-        onNavigate('home', '#top')
-      }}>
-        imran
+      <a className="wordmark" href="#top" aria-label="Tushar Imran home">
+        <img src="/assets/logo2.svg" alt="Imran logo" />
       </a>
-      <SocialLinks location="header" activePage={activePage} onNavigate={onNavigate} />
     </div>
   )
 }
@@ -182,36 +110,10 @@ function ActionButton({
   )
 }
 
-function ThemeToggle({ theme, onToggle }: { theme: ThemeMode; onToggle: () => void }) {
-  const isDark = theme === 'dark'
-
-  return (
-    <button
-      type="button"
-      className="theme-toggle"
-      onClick={onToggle}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-    >
-      <span className="theme-toggle__icon" aria-hidden="true">
-        {isDark ? (
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M12 3.75v1.5M12 18.75v1.5M4.75 12H3.25M20.75 12h-1.5M6.4 6.4l-1.06-1.06M18.66 18.66l-1.06-1.06M6.4 17.6l-1.06 1.06M18.66 5.34l-1.06 1.06" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="3.6" stroke="currentColor" strokeWidth="1.6" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M20 14.2A8 8 0 0 1 9.8 4a8 8 0 1 0 10.2 10.2Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-      </span>
-    </button>
-  )
-}
-
-function Profile({ activePage, onNavigate, theme, onToggleTheme }: { activePage: Page; onNavigate: (page: Page, hash: string) => void; theme: ThemeMode; onToggleTheme: () => void }) {
+function Profile() {
   return (
     <aside className="profile" aria-label="About Tushar Imran">
-      <TopNav activePage={activePage} onNavigate={onNavigate} />
+      <TopNav />
 
       <main className="profile-content">
         <section className="intro" aria-labelledby="name">
@@ -224,7 +126,7 @@ function Profile({ activePage, onNavigate, theme, onToggleTheme }: { activePage:
           </div>
 
           <div className="summary">
-            <p>Hey I’m Tushar, a software designer and maker based in Bangladesh. For over 5+ years, I’ve helped companies ship beautiful products that work well for their customers.</p>
+            <p>Hey I’m Imran, a software designer and creator based in Bangladesh. For over 5 years, I’ve helped founders and teams around the world to create experiences that are both beautiful and genuinely useful.</p>
             <div className="actions" id="contact">
               <ActionButton kind="call">Book a Call</ActionButton>
               <ActionButton kind="message">Message Me</ActionButton>
@@ -234,23 +136,19 @@ function Profile({ activePage, onNavigate, theme, onToggleTheme }: { activePage:
           <div className="timeline">
             <section>
               <h2>Previously</h2>
-              <p>Product designer at <strong>Zyft</strong></p>
+              <p>Product designer at <strong>Zyft</strong> , <strong>BG Apps</strong> </p>
+              
             </section>
             <section>
               <h2>Now</h2>
-              <p>Freelancing, experimenting with Claude Code, building <strong>Consumer Apps</strong></p>
+              <p>Freelancing, experimenting with AI, building <strong>Consumer Apps</strong></p>
             </section>
           </div>
         </section>
       </main>
 
       <footer className="profile-footer">
-        <div className="footer-top">
-          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-        </div>
-        <div className="footer-bottom">
-          <SocialLinks location="footer" activePage={activePage} onNavigate={onNavigate} />
-        </div>
+        <SocialLinks />
       </footer>
     </aside>
   )
@@ -269,49 +167,8 @@ function ProjectPanel({ project, onHoverChange }: { project: PortfolioProject; o
       onFocus={() => onHoverChange?.(true)}
       onBlur={() => onHoverChange?.(false)}
     >
-      <img
-        src={image}
-        alt={title}
-        draggable={false}
-        onDragStart={(event) => event.preventDefault()}
-      />
+      <img src={image} alt={title} draggable={false} onDragStart={(event) => event.preventDefault()} />
     </article>
-  )
-}
-
-function PricingView() {
-  const reduceMotion = useReducedMotion()
-  const pricingOptions = [pricingContent.landing, pricingContent.app]
-
-  return (
-    <motion.div
-      className="pricing-view"
-      initial={{ opacity: 0, x: 16 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -16 }}
-      transition={{ duration: reduceMotion ? 0 : 0.24, ease: 'easeOut' }}
-    >
-      {pricingOptions.map((option) => (
-        <motion.article
-          key={option.title}
-          className="pricing-card-panel"
-          whileHover={{ y: -4, scale: 1.01 }}
-          transition={{ duration: 0.16 }}
-        >
-          <div className="pricing-card-panel__content">
-            <p className="eyebrow">{option.title === 'Landing Page Design' ? '3–4 days' : '3–4 weeks'}</p>
-            <h3>{option.title}</h3>
-            <p className="pricing-card-panel__price">{option.price}</p>
-            <p className="pricing-card-panel__subtitle">{option.subtitle}</p>
-            <ul className="pricing-card-panel__list">
-              {option.included.slice(0, 4).map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        </motion.article>
-      ))}
-    </motion.div>
   )
 }
 
@@ -319,8 +176,6 @@ function App() {
   const reduceMotion = useReducedMotion()
   const rail = [...projects, ...projects]
   const railRef = useRef<HTMLDivElement>(null)
-  const dragging = useRef(false)
-  const pointerY = useRef(0)
   const offset = useRef(0)
   const hoverPausedRef = useRef(false)
   const manualPausedRef = useRef(false)
@@ -329,52 +184,13 @@ function App() {
   const pausedRef = useRef(false)
   const [loopHeight, setLoopHeight] = useState(0)
   const [translateY, setTranslateY] = useState(0)
-  const [page, setPage] = useState<Page>('home')
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    if (typeof window === 'undefined') return 'light'
-
-    const storedTheme = window.localStorage.getItem('portfolio-theme')
-    if (storedTheme === 'dark' || storedTheme === 'light') {
-      return storedTheme
-    }
-
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  })
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       const cal = await getCalApi()
       cal('ui', {})
     })()
   }, [])
-
-  useEffect(() => {
-    const syncPage = () => {
-      setPage(window.location.hash === '#pricing' ? 'pricing' : 'home')
-    }
-
-    syncPage()
-    window.addEventListener('hashchange', syncPage)
-    return () => window.removeEventListener('hashchange', syncPage)
-  }, [])
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    window.localStorage.setItem('portfolio-theme', theme)
-  }, [theme])
-
-  const navigatePage = (nextPage: Page, hash: string) => {
-    setPage(nextPage)
-    window.history.pushState({}, '', hash || (nextPage === 'pricing' ? '#pricing' : '#top'))
-  }
-
-  const normalizeOffset = (value: number) => {
-    if (!loopHeight) return value
-    let next = value
-    while (next >= 0) next -= loopHeight
-    while (next < -loopHeight) next += loopHeight
-    return next
-  }
 
   const clearResumeTimer = () => {
     if (resumeTimerRef.current) {
@@ -388,23 +204,6 @@ function App() {
       window.clearTimeout(manualResetTimerRef.current)
       manualResetTimerRef.current = null
     }
-  }
-
-  const syncPauseState = () => {
-    const shouldPause = hoverPausedRef.current || manualPausedRef.current
-    pausedRef.current = shouldPause
-
-    if (shouldPause) {
-      clearResumeTimer()
-      return
-    }
-
-    clearResumeTimer()
-    resumeTimerRef.current = window.setTimeout(() => {
-      if (!hoverPausedRef.current && !manualPausedRef.current) {
-        pausedRef.current = false
-      }
-    }, 15000)
   }
 
   const setHoverPaused = (hovered: boolean) => {
@@ -471,69 +270,50 @@ function App() {
   }, [])
 
   useAnimationFrame((_, delta) => {
-    if (reduceMotion || pausedRef.current || dragging.current || !loopHeight) return
+    if (reduceMotion || pausedRef.current || !loopHeight) return
     offset.current = normalizeOffset(offset.current + delta * 0.012)
     setTranslateY(offset.current)
   })
+
+  const normalizeOffset = (value: number) => {
+    if (!loopHeight) return value
+    let next = value
+    while (next >= 0) next -= loopHeight
+    while (next < -loopHeight) next += loopHeight
+    return next
+  }
 
   const moveRail = (amount: number) => {
     offset.current = normalizeOffset(offset.current + amount)
     setTranslateY(offset.current)
   }
 
-  const toggleTheme = () => {
-    setTheme((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'))
-  }
-
   return (
     <div id="top" className="portfolio">
       <Container className="portfolio-inner">
-        <Profile activePage={page} onNavigate={navigatePage} theme={theme} onToggleTheme={toggleTheme} />
+        <Profile />
         <section id="works" className="work" aria-label="Selected work">
           <AnimatePresence mode="wait">
-            {page === 'pricing' ? (
-              <PricingView key="pricing" />
-            ) : (
-              <motion.div
-                key="portfolio"
-                ref={railRef}
-                className="work-rail"
-                style={{ y: translateY }}
-                onPointerDown={(event) => {
-                  dragging.current = true
-                  pointerY.current = event.clientY
-                  activateManualPause()
-                  event.preventDefault()
-                  event.currentTarget.setPointerCapture(event.pointerId)
-                }}
-                onPointerMove={(event) => {
-                  if (!dragging.current) return
-                  event.preventDefault()
-                  activateManualPause()
-                  moveRail(event.clientY - pointerY.current)
-                  pointerY.current = event.clientY
-                }}
-                onPointerUp={(event) => {
-                  dragging.current = false
-                  releaseManualPause()
-                  event.currentTarget.releasePointerCapture(event.pointerId)
-                }}
-                onPointerCancel={() => {
-                  dragging.current = false
-                  releaseManualPause()
-                }}
-                onWheel={(event) => {
-                  event.preventDefault()
-                  activateManualPause()
-                  moveRail(-event.deltaY)
-                  releaseManualPause()
-                }}
-              >
-                {rail.map((project, index) => (
-                  <ProjectPanel key={`${project.title}-${index}`} project={project} onHoverChange={setHoverPaused} />
-                ))}
-              </motion.div>
-            )}
+            <motion.div
+              key="portfolio"
+              ref={railRef}
+              className="work-rail"
+              style={{ y: translateY }}
+              onWheel={(event) => {
+                event.preventDefault()
+                activateManualPause()
+                moveRail(-event.deltaY)
+                releaseManualPause()
+              }}
+            >
+              {rail.map((project, index) => (
+                <ProjectPanel
+                  key={`${project.title}-${index}`}
+                  project={project}
+                  onHoverChange={setHoverPaused}
+                />
+              ))}
+            </motion.div>
           </AnimatePresence>
         </section>
       </Container>
