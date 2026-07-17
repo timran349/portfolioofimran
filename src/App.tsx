@@ -120,7 +120,7 @@ function Profile() {
           <div className="identity">
             <img
               className="avatar"
-              src="/assets/headshot.png?v=2"
+              src="/assets/headshot.svg?v=2"
               alt="Tushar Imran"
               width={96}
               height={96}
