@@ -118,7 +118,14 @@ function Profile() {
       <main className="profile-content">
         <section className="intro" aria-labelledby="name">
           <div className="identity">
-            <img className="avatar" src="/assets/headshot.png" alt="Tushar Imran" />
+            <img
+              className="avatar"
+              src="/assets/headshot.png"
+              alt="Tushar Imran"
+              width={96}
+              height={96}
+              srcSet="/assets/headshot.png 1x, /assets/headshot.png 2x"
+            />
             <div>
               <h1 id="name">Tushar Imran</h1>
               <p>Software Designer</p>
