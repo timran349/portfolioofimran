@@ -467,6 +467,7 @@ function App() {
     <div
       id="top"
       className={`portfolio${showStickyCtas ? ' has-mobile-sticky-ctas' : ''}`}
+      onWheel={isMobileLayout ? undefined : handleWheelScroll}
     >
       <Container className="portfolio-inner">
         <Profile />
@@ -477,7 +478,6 @@ function App() {
               ref={railRef}
               className={`work-rail${isMobileLayout ? ' work-rail--static' : ''}`}
               style={isMobileLayout ? undefined : { y: translateY }}
-              onWheel={isMobileLayout ? undefined : handleWheelScroll}
             >
               {rail.map((project, index) => (
                 <ProjectPanel
