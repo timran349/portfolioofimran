@@ -34,7 +34,7 @@ a { color: inherit; text-decoration: none; }
   background-position: 0 0, 0 0;
 }
 .portfolio-inner { display: flex; flex-wrap: wrap; min-height: 100vh; }
-.profile { background: var(--bg); display: flex; flex: 0 0 620px; flex-direction: column; height: 100vh; min-height: 760px; padding: 100px; position: sticky; top: 0; width: 620px; }
+.profile { background: transparent; display: flex; flex: 0 0 620px; flex-direction: column; height: 100vh; min-height: 760px; padding: 100px; position: sticky; top: 0; width: 620px; }
 .work { flex: 1 0 0; height: 100vh; min-width: 0; overflow: hidden; padding: 0 30px; }
 .profile-header { align-items: center; display: flex; justify-content: space-between; min-height: 46.8px; width: 100%; padding-bottom: 40px; }
 .wordmark { color: var(--muted); display: inline-flex; align-items: center; font-family: Arial Black, Arial, sans-serif; font-weight: 900; letter-spacing: -2.5px; line-height: 1; }
