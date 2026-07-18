@@ -19,7 +19,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; cursor: url('/assets/cursor.svg') 5 1, auto; }
+html { scroll-behavior: smooth; cursor: url('/assets/figma-cursor.svg') 5 1, auto; }
 body { background: var(--bg); color: var(--text); margin: 0; min-width: 320px; overflow: hidden; }
 a { color: inherit; text-decoration: none; }
 
