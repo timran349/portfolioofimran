@@ -330,6 +330,7 @@ function App() {
   const resumeTimerRef = useRef<number | null>(null)
   const manualResetTimerRef = useRef<number | null>(null)
   const pausedRef = useRef(false)
+  const wheelMomentumRef = useRef(0)
   const [loopHeight, setLoopHeight] = useState(0)
   const [translateY, setTranslateY] = useState(0)
 
@@ -432,9 +433,18 @@ function App() {
   }, [])
 
   useAnimationFrame((_, delta) => {
-    if (isMobileLayout || reduceMotion || pausedRef.current || !loopHeight) return
-    offset.current = normalizeOffset(offset.current + delta * 0.012)
-    setTranslateY(offset.current)
+    if (isMobileLayout || reduceMotion || !loopHeight) return
+
+    if (!pausedRef.current) {
+      offset.current = normalizeOffset(offset.current + delta * 0.012)
+      setTranslateY(offset.current)
+    }
+
+    if (Math.abs(wheelMomentumRef.current) > 0.0001) {
+      offset.current = normalizeOffset(offset.current + wheelMomentumRef.current)
+      setTranslateY(offset.current)
+      wheelMomentumRef.current *= 0.84
+    }
   })
 
   const normalizeOffset = (value: number) => {
@@ -445,25 +455,18 @@ function App() {
     return next
   }
 
-  const moveRail = (amount: number) => {
-    offset.current = normalizeOffset(offset.current + amount)
-    setTranslateY(offset.current)
+  const handleWheelScroll = (event: React.WheelEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    activateManualPause()
+    wheelMomentumRef.current += -event.deltaY * 0.05
+    wheelMomentumRef.current = Math.max(-24, Math.min(24, wheelMomentumRef.current))
+    releaseManualPause()
   }
 
   return (
     <div
       id="top"
       className={`portfolio${showStickyCtas ? ' has-mobile-sticky-ctas' : ''}`}
-      onWheel={
-        isMobileLayout
-          ? undefined
-          : (event) => {
-              event.preventDefault()
-              activateManualPause()
-              moveRail(-event.deltaY)
-              releaseManualPause()
-            }
-      }
     >
       <Container className="portfolio-inner">
         <Profile />
@@ -474,16 +477,7 @@ function App() {
               ref={railRef}
               className={`work-rail${isMobileLayout ? ' work-rail--static' : ''}`}
               style={isMobileLayout ? undefined : { y: translateY }}
-              onWheel={
-                isMobileLayout
-                  ? undefined
-                  : (event) => {
-                      event.preventDefault()
-                      activateManualPause()
-                      moveRail(-event.deltaY)
-                      releaseManualPause()
-                    }
-              }
+              onWheel={isMobileLayout ? undefined : handleWheelScroll}
             >
               {rail.map((project, index) => (
                 <ProjectPanel
