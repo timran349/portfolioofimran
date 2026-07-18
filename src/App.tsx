@@ -406,7 +406,20 @@ function App() {
   }
 
   return (
-    <div id="top" className={`portfolio${showStickyCtas ? ' has-mobile-sticky-ctas' : ''}`}>
+    <div
+      id="top"
+      className={`portfolio${showStickyCtas ? ' has-mobile-sticky-ctas' : ''}`}
+      onWheel={
+        isMobileLayout
+          ? undefined
+          : (event) => {
+              event.preventDefault()
+              activateManualPause()
+              moveRail(-event.deltaY)
+              releaseManualPause()
+            }
+      }
+    >
       <Container className="portfolio-inner">
         <Profile />
         <section id="works" className="work" aria-label="Selected work">
