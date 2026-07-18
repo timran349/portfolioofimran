@@ -64,6 +64,11 @@ a { color: inherit; text-decoration: none; }
 .project-panel { aspect-ratio: 2048 / 1536; background: var(--surface-elevated); flex: 0 0 auto; margin: 0; overflow: hidden; padding: 0; width: 100%; }
 .project-panel img { display: block; height: 100%; object-fit: cover; user-select: none; width: 100%; -webkit-user-drag: none; -webkit-user-select: none; }
 
+/* Mobile sticky CTAs — hidden on desktop */
+.mobile-sticky-ctas {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   html, body, #root { height: auto; min-height: 100%; overflow: auto; }
   body { overflow-x: hidden; overflow-y: auto; }
@@ -74,6 +79,50 @@ a { color: inherit; text-decoration: none; }
   .work-rail:active { cursor: default; }
   .project-panel { aspect-ratio: 4 / 3; }
   .profile-header { gap: 20px; }
+
+  .portfolio.has-mobile-sticky-ctas .work {
+    padding-bottom: calc(22px + 88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-sticky-ctas {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    pointer-events: none;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, .92) 28%, #fff 100%);
+    transform: translateY(110%);
+    opacity: 0;
+    transition: transform .28s ease, opacity .28s ease;
+  }
+
+  .mobile-sticky-ctas.is-visible {
+    pointer-events: auto;
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .mobile-sticky-ctas__inner {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .mobile-sticky-ctas .action-button {
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .action-button--compact {
+    height: 48px;
+    padding: 12px 16px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -87,10 +136,15 @@ a { color: inherit; text-decoration: none; }
   .summary > p { max-width: 100%; }
   .timeline { height: auto; min-height: 0; }
   .work { height: auto; overflow: visible; padding: 0 16px 16px; width: 100%; }
+  .portfolio.has-mobile-sticky-ctas .work {
+    padding-bottom: calc(16px + 88px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (max-width: 390px) {
   .profile { padding-left: 20px; padding-right: 20px; }
   .profile-content { padding: 60px 0; }
   .actions { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .mobile-sticky-ctas__inner { gap: 8px; }
+  .action-button--compact { font-size: 13px; padding: 12px 12px; }
 }

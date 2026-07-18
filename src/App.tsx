@@ -6,25 +6,30 @@ type SocialLink = { label: string; href: string; download?: string }
 const footerLinks: SocialLink[] = [
   { label: 'Dribbble', href: 'https://dribbble.com/timran' },
   { label: 'Email', href: 'mailto:tusharimran092@gmail.com' },
-  { label: 'Resume', href: '/assets/Resume of Tushar.pdf', download: 'Resume of Tushar.pdf' },
+  { label: 'Resume', href: '/assets/resume-tushar.pdf', download: 'Resume of Tushar.pdf' },
 ]
 
 type PortfolioProject = {
   title: string
   image: string
+  width: number
+  height: number
 }
 
 const projects: PortfolioProject[] = [
-  { title: 'Founders Mine App', image: '/assets/1 Founders Mine App.png' },
-  { title: 'Yorble - Smart Email Ai App', image: '/assets/2 Yorble - Smart Email Ai App.png' },
-  { title: 'Smart Alarm App', image: '/assets/3 Smart Alarm App.png' },
-  { title: 'Nano - Tasks', image: '/assets/4 Nano - Tasks.png' },
-  { title: 'Onboarding - Mood app', image: '/assets/5 Onboarding - Mood app.png' },
-  { title: 'Crypto Trading - Wallet App', image: '/assets/6 Crypto Trading - Wallet App.png' },
-  { title: 'Whisk - Recipe Maker App', image: '/assets/7 Whisk - Recipe Maker App.png' },
-  { title: 'Nano - Dashboard', image: '/assets/8 Nano - Dashboard.png' },
-  { title: 'Skill-Up Learning App', image: '/assets/9 Skill-Up Learning App.png' },
+  { title: 'Founders Mine App', image: '/assets/founders-mine.webp', width: 1600, height: 1200 },
+  { title: 'Yorble - Smart Email Ai App', image: '/assets/yorble.webp', width: 1600, height: 1200 },
+  { title: 'Smart Alarm App', image: '/assets/smart-alarm.webp', width: 1600, height: 1200 },
+  { title: 'Nano - Tasks', image: '/assets/nano-tasks.webp', width: 1600, height: 1200 },
+  { title: 'Onboarding - Mood app', image: '/assets/mood-onboarding.webp', width: 1600, height: 1200 },
+  { title: 'Crypto Trading - Wallet App', image: '/assets/crypto-wallet.webp', width: 1600, height: 1200 },
+  { title: 'Whisk - Recipe Maker App', image: '/assets/whisk.webp', width: 1600, height: 1200 },
+  { title: 'Nano - Dashboard', image: '/assets/nano-dashboard.webp', width: 1600, height: 1200 },
+  { title: 'Skill-Up Learning App', image: '/assets/skill-up.webp', width: 1600, height: 1200 },
 ]
+
+const CAL_LINK = 'https://cal.com/timran/meeting-with-imran'
+const WHATSAPP_LINK = 'https://wa.me/+88001826381938'
 
 function Container({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
@@ -56,7 +61,7 @@ function TopNav() {
   return (
     <div className="profile-header">
       <a className="wordmark" href="#top" aria-label="Tushar Imran home">
-        <img src="/assets/logo2.svg" alt="Imran logo" />
+        <img src="/assets/logo2.svg" alt="Imran logo" width={88} height={22} />
       </a>
     </div>
   )
@@ -79,15 +84,19 @@ function GoogleMeetIcon() {
 function ActionButton({
   kind,
   children,
+  className = '',
 }: {
   kind: 'call' | 'message'
   children: string
+  className?: string
 }) {
+  const classes = `action-button${className ? ` ${className}` : ''}`
+
   if (kind === 'call') {
     return (
       <button
-        className="action-button"
-        data-cal-link="https://cal.com/timran/meeting-with-imran"
+        className={classes}
+        data-cal-link={CAL_LINK}
         data-cal-config='{"layout":"month_view"}'
         type="button"
       >
@@ -99,14 +108,34 @@ function ActionButton({
 
   return (
     <a
-      className="action-button"
-      href="https://wa.me/+88001826381938"
+      className={classes}
+      href={WHATSAPP_LINK}
       target="_blank"
       rel="noopener noreferrer"
     >
-      <img src="/assets/social-icon.svg" alt="" aria-hidden="true" />
+      <img src="/assets/social-icon.svg" alt="" aria-hidden="true" width={20} height={20} />
       <span>{children}</span>
     </a>
+  )
+}
+
+function MobileStickyCtas({ visible }: { visible: boolean }) {
+  return (
+    <div
+      className={`mobile-sticky-ctas${visible ? ' is-visible' : ''}`}
+      aria-hidden={!visible}
+      // Prevent focusing CTAs while the bar is off-screen
+      {...(!visible ? { inert: true } : {})}
+    >
+      <div className="mobile-sticky-ctas__inner">
+        <ActionButton kind="call" className="action-button--compact">
+          Book a Call
+        </ActionButton>
+        <ActionButton kind="message" className="action-button--compact">
+          Message Me
+        </ActionButton>
+      </div>
+    </div>
   )
 }
 
@@ -120,11 +149,13 @@ function Profile() {
           <div className="identity">
             <img
               className="avatar"
-              src="/assets/headshot.svg?v=2"
+              src="/assets/headshot-192.webp"
+              srcSet="/assets/headshot-192.webp 1x, /assets/headshot-384.webp 2x"
               alt="Tushar Imran"
               width={96}
               height={96}
-              srcSet="/assets/headshot.png?v=2 1x, /assets/headshot.png?v=2 2x"
+              decoding="async"
+              fetchPriority="high"
             />
             <div>
               <h1 id="name">Tushar Imran</h1>
@@ -161,8 +192,16 @@ function Profile() {
   )
 }
 
-function ProjectPanel({ project, onHoverChange }: { project: PortfolioProject; onHoverChange?: (hovered: boolean) => void }) {
-  const { title, image } = project
+function ProjectPanel({
+  project,
+  onHoverChange,
+  priority = false,
+}: {
+  project: PortfolioProject
+  onHoverChange?: (hovered: boolean) => void
+  priority?: boolean
+}) {
+  const { title, image, width, height } = project
 
   return (
     <article
@@ -174,7 +213,17 @@ function ProjectPanel({ project, onHoverChange }: { project: PortfolioProject; o
       onFocus={() => onHoverChange?.(true)}
       onBlur={() => onHoverChange?.(false)}
     >
-      <img src={image} alt={title} draggable={false} onDragStart={(event) => event.preventDefault()} />
+      <img
+        src={image}
+        alt={title}
+        width={width}
+        height={height}
+        draggable={false}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchPriority={priority ? 'high' : 'auto'}
+        onDragStart={(event) => event.preventDefault()}
+      />
     </article>
   )
 }
@@ -196,10 +245,38 @@ function useIsMobileLayout(breakpoint = 1024) {
   return isMobileLayout
 }
 
+function useStickyMobileCtas(enabled: boolean) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (!enabled) {
+      setVisible(false)
+      return
+    }
+
+    const target = document.getElementById('contact')
+    if (!target) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Show sticky bar once the in-page CTAs leave the viewport
+        setVisible(!entry.isIntersecting)
+      },
+      { root: null, threshold: 0, rootMargin: '-8px 0px 0px 0px' },
+    )
+
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [enabled])
+
+  return visible
+}
+
 function App() {
   const reduceMotion = useReducedMotion()
   // Match CSS layout break where profile stacks above work and page scrolls natively.
   const isMobileLayout = useIsMobileLayout(1024)
+  const showStickyCtas = useStickyMobileCtas(isMobileLayout)
   const rail = isMobileLayout ? projects : [...projects, ...projects]
   const railRef = useRef<HTMLDivElement>(null)
   const offset = useRef(0)
@@ -329,7 +406,7 @@ function App() {
   }
 
   return (
-    <div id="top" className="portfolio">
+    <div id="top" className={`portfolio${showStickyCtas ? ' has-mobile-sticky-ctas' : ''}`}>
       <Container className="portfolio-inner">
         <Profile />
         <section id="works" className="work" aria-label="Selected work">
@@ -355,12 +432,14 @@ function App() {
                   key={`${project.title}-${index}`}
                   project={project}
                   onHoverChange={isMobileLayout ? undefined : setHoverPaused}
+                  priority={index === 0}
                 />
               ))}
             </motion.div>
           </AnimatePresence>
         </section>
       </Container>
+      {isMobileLayout ? <MobileStickyCtas visible={showStickyCtas} /> : null}
     </div>
   )
 }
