@@ -26,21 +26,14 @@ a { color: inherit; text-decoration: none; }
 #root { height: 100vh; min-height: 100vh; }
 
 .portfolio {
-  position: relative;
   background: var(--bg);
-}
-.portfolio::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
   background-image:
     linear-gradient(rgba(20, 20, 20, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(20, 20, 20, 0.03) 1px, transparent 1px),
-    linear-gradient(to right, transparent 99px, rgba(20,20,20,0.08) 100px, transparent 101px),
-    linear-gradient(to right, transparent 619px, rgba(20,20,20,0.08) 620px, transparent 621px);
+    linear-gradient(to right, transparent 99px, rgba(20, 20, 20, 0.08) 100px, transparent 101px),
+    linear-gradient(to right, transparent 719px, rgba(20, 20, 20, 0.08) 720px, transparent 721px);
   background-size: 72px 72px, 72px 72px, 100% 100%, 100% 100%;
-  background-position: 100px 100px, 100px 100px, 0 0, 0 0;
+  background-position: 0 0, 0 0, 0 0, 0 0;
 }
 .portfolio-inner { display: flex; flex-wrap: wrap; min-height: 100vh; }
 .profile { background: transparent; display: flex; flex: 0 0 620px; flex-direction: column; height: 100vh; min-height: 760px; padding: 100px; position: sticky; top: 0; width: 620px; }
