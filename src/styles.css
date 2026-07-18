@@ -32,6 +32,26 @@ a { color: inherit; text-decoration: none; }
     linear-gradient(90deg, rgba(20, 20, 20, 0.03) 1px, transparent 1px);
   background-size: 72px 72px;
   background-position: 0 0, 0 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.portfolio::before {
+  animation: ambientDrift 12s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at top left, rgba(20, 20, 20, 0.05) 0, transparent 38%),
+    radial-gradient(circle at 85% 15%, rgba(20, 20, 20, 0.03) 0, transparent 24%);
+  content: '';
+  inset: 0;
+  opacity: 0.95;
+  pointer-events: none;
+  position: absolute;
+  transform-origin: center;
+}
+
+@keyframes ambientDrift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(1.5%, -1.5%, 0) scale(1.04); }
 }
 .portfolio-inner { display: flex; flex-wrap: wrap; min-height: 100vh; }
 .profile { background: transparent; display: flex; flex: 0 0 620px; flex-direction: column; height: 100vh; min-height: 760px; padding: 100px; position: sticky; top: 0; width: 620px; }

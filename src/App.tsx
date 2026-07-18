@@ -41,20 +41,30 @@ function Container({ children, className = '' }: { children: ReactNode; classNam
 }
 
 function SocialLinks() {
+  const reduceMotion = useReducedMotion()
+
   return (
-    <nav className="social-links social-links--footer" aria-label="footer social links">
+    <motion.nav
+      className="social-links social-links--footer"
+      aria-label="footer social links"
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    >
       {footerLinks.map(({ label, href, download }) => (
-        <a
+        <motion.a
           key={label}
           href={href}
           target={href.startsWith('http') ? '_blank' : undefined}
           rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
           download={download}
+          whileHover={reduceMotion ? undefined : { y: -2, opacity: 0.75, transition: { duration: 0.2 } }}
+          whileTap={reduceMotion ? undefined : { scale: 0.97 }}
         >
           {label}
-        </a>
+        </motion.a>
       ))}
-    </nav>
+    </motion.nav>
   )
 }
 
@@ -92,31 +102,37 @@ function ActionButton({
   className?: string
 }) {
   const classes = `action-button${className ? ` ${className}` : ''}`
+  const reduceMotion = useReducedMotion()
+  const sharedMotionProps = {
+    className: classes,
+    whileHover: reduceMotion ? undefined : { y: -3, scale: 1.01, transition: { duration: 0.2 } },
+    whileTap: reduceMotion ? undefined : { scale: 0.98 },
+  }
 
   if (kind === 'call') {
     return (
-      <button
-        className={classes}
+      <motion.button
+        {...sharedMotionProps}
         data-cal-link={CAL_LINK}
         data-cal-config='{"layout":"month_view"}'
         type="button"
       >
         <GoogleMeetIcon />
         <span>{children}</span>
-      </button>
+      </motion.button>
     )
   }
 
   return (
-    <a
-      className={classes}
+    <motion.a
+      {...sharedMotionProps}
       href={WHATSAPP_LINK}
       target="_blank"
       rel="noopener noreferrer"
     >
       <img src="/assets/social-icon.svg" alt="" aria-hidden="true" width={20} height={20} />
       <span>{children}</span>
-    </a>
+    </motion.a>
   )
 }
 
@@ -141,13 +157,26 @@ function MobileStickyCtas({ visible }: { visible: boolean }) {
 }
 
 function Profile() {
+  const reduceMotion = useReducedMotion()
+
   return (
     <aside className="profile" aria-label="About Tushar Imran">
       <TopNav />
 
       <main className="profile-content">
-        <section className="intro" aria-labelledby="name">
-          <div className="identity">
+        <motion.section
+          className="intro"
+          aria-labelledby="name"
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <motion.div
+            className="identity"
+            initial={reduceMotion ? false : { opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          >
             <img
               className="avatar"
               src="/assets/headshot-192.webp"
@@ -162,28 +191,37 @@ function Profile() {
               <h1 id="name">Tushar Imran</h1>
               <p>Software Designer</p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="summary">
+          <motion.div
+            className="summary"
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          >
             <p>Hey I’m Imran, a software designer and creator based in Bangladesh. For over 5 years, I’ve helped founders and teams around the world to create user experiences that are both beautiful and genuinely useful.</p>
             <div className="actions" id="contact">
               <ActionButton kind="call">Book a Call</ActionButton>
               <ActionButton kind="message">Message Me</ActionButton>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="timeline">
+          <motion.div
+            className="timeline"
+            initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          >
             <section>
               <h2>Previously</h2>
               <p>Product designer at <strong>Zyft</strong> , <strong>BG Apps</strong> </p>
-              
             </section>
             <section>
               <h2>Now</h2>
               <p>Freelancing, experimenting with AI, building <strong>Consumer Apps</strong></p>
             </section>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
       </main>
 
       <footer className="profile-footer">
@@ -197,17 +235,23 @@ function ProjectPanel({
   project,
   onHoverChange,
   priority = false,
+  index = 0,
 }: {
   project: PortfolioProject
   onHoverChange?: (hovered: boolean) => void
   priority?: boolean
+  index?: number
 }) {
   const { title, image, width, height } = project
+  const reduceMotion = useReducedMotion()
 
   return (
-    <article
+    <motion.article
       aria-label={title}
       className="project-panel"
+      initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
       onMouseDown={(event) => event.preventDefault()}
       onMouseEnter={() => onHoverChange?.(true)}
       onMouseLeave={() => onHoverChange?.(false)}
@@ -225,7 +269,7 @@ function ProjectPanel({
         fetchPriority={priority ? 'high' : 'auto'}
         onDragStart={(event) => event.preventDefault()}
       />
-    </article>
+    </motion.article>
   )
 }
 
@@ -447,6 +491,7 @@ function App() {
                   project={project}
                   onHoverChange={isMobileLayout ? undefined : setHoverPaused}
                   priority={index === 0}
+                  index={index}
                 />
               ))}
             </motion.div>
