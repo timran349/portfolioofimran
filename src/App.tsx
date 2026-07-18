@@ -179,9 +179,28 @@ function ProjectPanel({ project, onHoverChange }: { project: PortfolioProject; o
   )
 }
 
+function useIsMobileLayout(breakpoint = 1024) {
+  const [isMobileLayout, setIsMobileLayout] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia(`(max-width: ${breakpoint}px)`).matches
+  })
+
+  useEffect(() => {
+    const media = window.matchMedia(`(max-width: ${breakpoint}px)`)
+    const onChange = () => setIsMobileLayout(media.matches)
+    onChange()
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [breakpoint])
+
+  return isMobileLayout
+}
+
 function App() {
   const reduceMotion = useReducedMotion()
-  const rail = [...projects, ...projects]
+  // Match CSS layout break where profile stacks above work and page scrolls natively.
+  const isMobileLayout = useIsMobileLayout(1024)
+  const rail = isMobileLayout ? projects : [...projects, ...projects]
   const railRef = useRef<HTMLDivElement>(null)
   const offset = useRef(0)
   const hoverPausedRef = useRef(false)
@@ -214,6 +233,7 @@ function App() {
   }
 
   const setHoverPaused = (hovered: boolean) => {
+    if (isMobileLayout) return
     hoverPausedRef.current = hovered
     if (hovered) {
       pausedRef.current = true
@@ -253,6 +273,19 @@ function App() {
   }
 
   useEffect(() => {
+    // Mobile uses a static stacked list and native page scroll — no infinite rail.
+    if (isMobileLayout) {
+      offset.current = 0
+      setLoopHeight(0)
+      setTranslateY(0)
+      pausedRef.current = false
+      hoverPausedRef.current = false
+      manualPausedRef.current = false
+      clearResumeTimer()
+      clearManualResetTimer()
+      return
+    }
+
     const railElement = railRef.current
     if (!railElement) return
 
@@ -267,7 +300,7 @@ function App() {
     const observer = new ResizeObserver(updateHeight)
     observer.observe(railElement)
     return () => observer.disconnect()
-  }, [])
+  }, [isMobileLayout])
 
   useEffect(() => {
     return () => {
@@ -277,7 +310,7 @@ function App() {
   }, [])
 
   useAnimationFrame((_, delta) => {
-    if (reduceMotion || pausedRef.current || !loopHeight) return
+    if (isMobileLayout || reduceMotion || pausedRef.current || !loopHeight) return
     offset.current = normalizeOffset(offset.current + delta * 0.012)
     setTranslateY(offset.current)
   })
@@ -302,22 +335,26 @@ function App() {
         <section id="works" className="work" aria-label="Selected work">
           <AnimatePresence mode="wait">
             <motion.div
-              key="portfolio"
+              key={isMobileLayout ? 'portfolio-static' : 'portfolio'}
               ref={railRef}
-              className="work-rail"
-              style={{ y: translateY }}
-              onWheel={(event) => {
-                event.preventDefault()
-                activateManualPause()
-                moveRail(-event.deltaY)
-                releaseManualPause()
-              }}
+              className={`work-rail${isMobileLayout ? ' work-rail--static' : ''}`}
+              style={isMobileLayout ? undefined : { y: translateY }}
+              onWheel={
+                isMobileLayout
+                  ? undefined
+                  : (event) => {
+                      event.preventDefault()
+                      activateManualPause()
+                      moveRail(-event.deltaY)
+                      releaseManualPause()
+                    }
+              }
             >
               {rail.map((project, index) => (
                 <ProjectPanel
                   key={`${project.title}-${index}`}
                   project={project}
-                  onHoverChange={setHoverPaused}
+                  onHoverChange={isMobileLayout ? undefined : setHoverPaused}
                 />
               ))}
             </motion.div>
