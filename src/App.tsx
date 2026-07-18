@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useAnimationFrame, useReducedMotion } from 'framer-motion'
 import { getCalApi } from '@calcom/embed-react'
+import { Analytics } from '@vercel/analytics/react'
 
 type SocialLink = { label: string; href: string; download?: string }
 const footerLinks: SocialLink[] = [
@@ -453,6 +454,7 @@ function App() {
         </section>
       </Container>
       {isMobileLayout ? <MobileStickyCtas visible={showStickyCtas} /> : null}
+      <Analytics />
     </div>
   )
 }
