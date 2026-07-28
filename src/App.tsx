@@ -18,15 +18,15 @@ type PortfolioProject = {
 }
 
 const projects: PortfolioProject[] = [
-  { title: 'Founders Mine App', image: '/assets/founders-mine.webp', width: 1600, height: 1200 },
-  { title: 'Yorble - Smart Email Ai App', image: '/assets/yorble.webp', width: 1600, height: 1200 },
-  { title: 'Smart Alarm App', image: '/assets/smart-alarm.webp', width: 1600, height: 1200 },
-  { title: 'Nano - Tasks', image: '/assets/nano-tasks.webp', width: 1600, height: 1200 },
-  { title: 'Onboarding - Mood app', image: '/assets/mood-onboarding.webp', width: 1600, height: 1200 },
-  { title: 'Crypto Trading - Wallet App', image: '/assets/crypto-wallet.webp', width: 1600, height: 1200 },
-  { title: 'Whisk - Recipe Maker App', image: '/assets/whisk.webp', width: 1600, height: 1200 },
-  { title: 'Nano - Dashboard', image: '/assets/nano-dashboard.webp', width: 1600, height: 1200 },
-  { title: 'Skill-Up Learning App', image: '/assets/skill-up.webp', width: 1600, height: 1200 },
+  { title: 'Founders Mine App', image: '/assets/1 Founders Mine App.png', width: 2560, height: 1920 },
+  { title: 'Yorble - Smart Email Ai App', image: '/assets/2 Yorble - Smart Email Ai App.png', width: 2560, height: 1920 },
+  { title: 'Smart Alarm App', image: '/assets/3 Smart Alarm App.png', width: 2560, height: 1920 },
+  { title: 'Nano - Tasks', image: '/assets/4 Nano - Tasks.png', width: 2560, height: 1920 },
+  { title: 'Onboarding - Mood app', image: '/assets/5 Onboarding - Mood app.png', width: 2560, height: 1920 },
+  { title: 'Crypto Trading - Wallet App', image: '/assets/6 Crypto Trading - Wallet App.png', width: 2560, height: 1920 },
+  { title: 'Whisk - Recipe Maker App', image: '/assets/7 Whisk - Recipe Maker App.png', width: 2560, height: 1920 },
+  { title: 'Nano - Dashboard', image: '/assets/8 Nano - Dashboard.png', width: 2560, height: 1920 },
+  { title: 'Skill-Up Learning App', image: '/assets/9 Skill-Up Learning App.png', width: 2560, height: 1920 },
 ]
 
 const CAL_LINK = 'https://cal.com/timran/meeting-with-imran'
@@ -231,13 +231,24 @@ function Profile() {
   )
 }
 
+const springTransition = {
+  type: 'spring' as const,
+  stiffness: 420,
+  damping: 25,
+  mass: 0.5,
+}
+
 function ProjectPanel({
   project,
+  instanceId,
+  onSelect,
   onHoverChange,
   priority = false,
   index = 0,
 }: {
   project: PortfolioProject
+  instanceId: string
+  onSelect: () => void
   onHoverChange?: (hovered: boolean) => void
   priority?: boolean
   index?: number
@@ -252,13 +263,15 @@ function ProjectPanel({
       initial={reduceMotion ? false : { opacity: 0, y: 22 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-      onMouseDown={(event) => event.preventDefault()}
       onMouseEnter={() => onHoverChange?.(true)}
       onMouseLeave={() => onHoverChange?.(false)}
       onFocus={() => onHoverChange?.(true)}
       onBlur={() => onHoverChange?.(false)}
+      onPointerDown={onSelect}
+      onClick={onSelect}
     >
-      <img
+      <motion.img
+        layoutId={`portfolio-img-${instanceId}`}
         src={image}
         alt={title}
         width={width}
@@ -267,9 +280,63 @@ function ProjectPanel({
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
         fetchPriority={priority ? 'high' : 'auto'}
+        style={{ aspectRatio: `${width} / ${height}` }}
         onDragStart={(event) => event.preventDefault()}
+        transition={springTransition}
       />
     </motion.article>
+  )
+}
+
+function ProjectLightbox({
+  project,
+  instanceId,
+  onClose,
+}: {
+  project: PortfolioProject
+  instanceId: string
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  return (
+    <div
+      className="lightbox-portal"
+      role="dialog"
+      aria-modal="true"
+      aria-label={project.title}
+      onPointerDown={onClose}
+      onClick={onClose}
+    >
+      <motion.div
+        className="lightbox-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.12, ease: 'easeOut' }}
+      />
+
+      <div className="lightbox-content">
+        <motion.img
+          layoutId={`portfolio-img-${instanceId}`}
+          src={project.image}
+          alt={project.title}
+          width={project.width}
+          height={project.height}
+          className="lightbox-expanded-img"
+          decoding="async"
+          fetchPriority="high"
+          style={{ aspectRatio: `${project.width} / ${project.height}` }}
+          transition={springTransition}
+        />
+      </div>
+    </div>
   )
 }
 
@@ -334,6 +401,11 @@ function App() {
   const [loopHeight, setLoopHeight] = useState(0)
   const [translateY, setTranslateY] = useState(0)
 
+  const [activeSelection, setActiveSelection] = useState<{
+    projectIndex: number
+    instanceId: string
+  } | null>(null)
+
   useEffect(() => {
     ;(async () => {
       const cal = await getCalApi()
@@ -356,7 +428,7 @@ function App() {
   }
 
   const setHoverPaused = (hovered: boolean) => {
-    if (isMobileLayout) return
+    if (isMobileLayout || activeSelection) return
     hoverPausedRef.current = hovered
     if (hovered) {
       pausedRef.current = true
@@ -367,7 +439,7 @@ function App() {
     pausedRef.current = true
     clearResumeTimer()
     resumeTimerRef.current = window.setTimeout(() => {
-      if (!hoverPausedRef.current && !manualPausedRef.current) {
+      if (!hoverPausedRef.current && !manualPausedRef.current && !activeSelection) {
         pausedRef.current = false
       }
     }, 15000)
@@ -383,17 +455,25 @@ function App() {
     clearManualResetTimer()
     manualResetTimerRef.current = window.setTimeout(() => {
       manualPausedRef.current = false
-      if (!hoverPausedRef.current) {
+      if (!hoverPausedRef.current && !activeSelection) {
         pausedRef.current = true
         clearResumeTimer()
         resumeTimerRef.current = window.setTimeout(() => {
-          if (!hoverPausedRef.current && !manualPausedRef.current) {
+          if (!hoverPausedRef.current && !manualPausedRef.current && !activeSelection) {
             pausedRef.current = false
           }
         }, 15000)
       }
     }, 180)
   }
+
+  useEffect(() => {
+    if (activeSelection) {
+      pausedRef.current = true
+    } else if (!hoverPausedRef.current && !manualPausedRef.current) {
+      pausedRef.current = false
+    }
+  }, [activeSelection])
 
   useEffect(() => {
     // Mobile uses a static stacked list and native page scroll — no infinite rail.
@@ -435,12 +515,12 @@ function App() {
   useAnimationFrame((_, delta) => {
     if (isMobileLayout || reduceMotion || !loopHeight) return
 
-    if (!pausedRef.current) {
+    if (!pausedRef.current && !activeSelection) {
       offset.current = normalizeOffset(offset.current + delta * 0.012)
       setTranslateY(offset.current)
     }
 
-    if (Math.abs(wheelMomentumRef.current) > 0.0001) {
+    if (Math.abs(wheelMomentumRef.current) > 0.0001 && !activeSelection) {
       offset.current = normalizeOffset(offset.current + wheelMomentumRef.current)
       setTranslateY(offset.current)
       wheelMomentumRef.current *= 0.84
@@ -456,11 +536,38 @@ function App() {
   }
 
   const handleWheelScroll = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (activeSelection) return
     event.preventDefault()
     activateManualPause()
     wheelMomentumRef.current += -event.deltaY * 0.05
     wheelMomentumRef.current = Math.max(-24, Math.min(24, wheelMomentumRef.current))
     releaseManualPause()
+  }
+
+  const handleSelectProject = (projectIndex: number, instanceId: string) => {
+    setActiveSelection({ projectIndex, instanceId })
+  }
+
+  const handleCloseLightbox = () => {
+    setActiveSelection(null)
+  }
+
+  const handlePrevProject = () => {
+    if (!activeSelection) return
+    const prevProjIndex = (activeSelection.projectIndex - 1 + projects.length) % projects.length
+    setActiveSelection({
+      projectIndex: prevProjIndex,
+      instanceId: `proj-${prevProjIndex}-0`,
+    })
+  }
+
+  const handleNextProject = () => {
+    if (!activeSelection) return
+    const nextProjIndex = (activeSelection.projectIndex + 1) % projects.length
+    setActiveSelection({
+      projectIndex: nextProjIndex,
+      instanceId: `proj-${nextProjIndex}-0`,
+    })
   }
 
   return (
@@ -479,19 +586,36 @@ function App() {
               className={`work-rail${isMobileLayout ? ' work-rail--static' : ''}`}
               style={isMobileLayout ? undefined : { y: translateY }}
             >
-              {rail.map((project, index) => (
-                <ProjectPanel
-                  key={`${project.title}-${index}`}
-                  project={project}
-                  onHoverChange={isMobileLayout ? undefined : setHoverPaused}
-                  priority={index === 0}
-                  index={index}
-                />
-              ))}
+              {rail.map((project, index) => {
+                const projectIndex = index % projects.length
+                const instanceId = `proj-${projectIndex}-${Math.floor(index / projects.length)}`
+                return (
+                  <ProjectPanel
+                    key={instanceId}
+                    instanceId={instanceId}
+                    project={project}
+                    onSelect={() => handleSelectProject(projectIndex, instanceId)}
+                    onHoverChange={isMobileLayout ? undefined : setHoverPaused}
+                    priority={index === 0}
+                    index={index}
+                  />
+                )
+              })}
             </motion.div>
           </AnimatePresence>
         </section>
       </Container>
+
+      <AnimatePresence>
+        {activeSelection && (
+          <ProjectLightbox
+            project={projects[activeSelection.projectIndex]}
+            instanceId={activeSelection.instanceId}
+            onClose={handleCloseLightbox}
+          />
+        )}
+      </AnimatePresence>
+
       {isMobileLayout ? <MobileStickyCtas visible={showStickyCtas} /> : null}
       <Analytics />
     </div>
@@ -499,3 +623,4 @@ function App() {
 }
 
 export default App
+
