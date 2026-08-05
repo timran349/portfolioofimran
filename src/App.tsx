@@ -34,7 +34,7 @@ const WHATSAPP_LINK = 'https://wa.me/+88001826381938'
 
 function Container({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`mx-auto w-full max-w-[1350px] px-6 lg:px-8 ${className}`.trim()}>
+    <div className={`mx-auto w-full max-w-[1350px] ${className}`.trim()}>
       {children}
     </div>
   )
