@@ -255,6 +255,23 @@ function ProjectPanel({
 }) {
   const { title, image, width, height } = project
   const reduceMotion = useReducedMotion()
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStartRef.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (pointerStartRef.current) {
+      const dx = Math.abs(e.clientX - pointerStartRef.current.x)
+      const dy = Math.abs(e.clientY - pointerStartRef.current.y)
+      pointerStartRef.current = null
+      if (dx > 8 || dy > 8) {
+        return
+      }
+    }
+    onSelect()
+  }
 
   return (
     <motion.article
@@ -267,8 +284,8 @@ function ProjectPanel({
       onMouseLeave={() => onHoverChange?.(false)}
       onFocus={() => onHoverChange?.(true)}
       onBlur={() => onHoverChange?.(false)}
-      onPointerDown={onSelect}
-      onClick={onSelect}
+      onPointerDown={handlePointerDown}
+      onClick={handleClick}
     >
       <motion.img
         layoutId={`portfolio-img-${instanceId}`}
