@@ -101,6 +101,176 @@ function TopNav() {
   )
 }
 
+let audioCtx: AudioContext | null = null
+
+const SOUND_PRESETS = {
+  click: { from: 880, to: 440, peak: 0.13 },
+  nav: { from: 1320, to: 760, peak: 0.1 },
+}
+
+function triggerTone(ctx: AudioContext, type: 'click' | 'nav') {
+  const { from, to, peak } = SOUND_PRESETS[type]
+  const now = ctx.currentTime
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(from, now)
+  osc.frequency.exponentialRampToValueAtTime(to, now + 0.09)
+
+  gain.gain.setValueAtTime(0.0001, now)
+  gain.gain.exponentialRampToValueAtTime(peak, now + 0.008)
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12)
+
+  osc.connect(gain).connect(ctx.destination)
+  osc.start(now)
+  osc.stop(now + 0.14)
+}
+
+function playTone(type: 'click' | 'nav' = 'click') {
+  try {
+    if (!audioCtx) {
+      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      if (!AudioCtxClass) return
+      audioCtx = new AudioCtxClass()
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => triggerTone(audioCtx!, type)).catch(() => {})
+      return
+    }
+    triggerTone(audioCtx, type)
+  } catch {}
+}
+
+function unlockAudio() {
+  try {
+    if (!audioCtx) {
+      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      if (AudioCtxClass) audioCtx = new AudioCtxClass()
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume()
+    }
+  } catch {}
+}
+
+function SoundEffects() {
+  useEffect(() => {
+    const handleFirstPointer = () => unlockAudio()
+    document.addEventListener('pointerdown', handleFirstPointer, { once: true })
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return
+      const target = (e.target as HTMLElement)?.closest('a, button, [role="button"]')
+      const isNav = !!target?.getAttribute('aria-label')?.match(/^(previous|next|go to)\b/i)
+      playTone(isNav ? 'nav' : 'click')
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => {
+      document.removeEventListener('pointerdown', handleFirstPointer)
+      document.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [])
+
+  return null
+}
+
+function CustomCursor() {
+  const dotRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const dot = dotRef.current
+    if (!dot) return
+
+    const finePointer = window.matchMedia('(pointer: fine)').matches
+    const root = document.documentElement
+    if (finePointer) root.classList.add('has-custom-cursor')
+
+    let targetX = window.innerWidth / 2
+    let targetY = window.innerHeight / 2
+    let currentX = targetX
+    let currentY = targetY
+    let isMoving = false
+    let animId = 0
+
+    const spawnSpark = (x: number, y: number) => {
+      const spark = document.createElement('span')
+      spark.className = 'spark'
+      spark.style.left = `${x}px`
+      spark.style.top = `${y}px`
+
+      spark.appendChild(document.createElement('b'))
+
+      for (let i = 0; i < 8; i++) {
+        const tick = document.createElement('i')
+        tick.style.setProperty('--a', `${i * 45}deg`)
+        spark.appendChild(tick)
+      }
+
+      document.body.appendChild(spark)
+      setTimeout(() => spark.remove(), 450)
+    }
+
+    const handlePointerMove = (e: PointerEvent) => {
+      targetX = e.clientX
+      targetY = e.clientY
+      if (!isMoving) {
+        isMoving = true
+        currentX = targetX
+        currentY = targetY
+      }
+      dot.dataset.active = 'true'
+      const isHot = !!(e.target as HTMLElement)?.closest('a, button, [role="button"]')
+      dot.dataset.hot = String(isHot)
+    }
+
+    const handlePointerDown = (e: PointerEvent) => {
+      targetX = e.clientX
+      targetY = e.clientY
+      if (!isMoving) {
+        isMoving = true
+        currentX = targetX
+        currentY = targetY
+        dot.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`
+      }
+      dot.dataset.active = 'true'
+      spawnSpark(e.clientX, e.clientY)
+    }
+
+    const handlePointerLeave = () => {
+      dot.dataset.active = 'false'
+    }
+
+    const animate = () => {
+      currentX += (targetX - currentX) * 0.8
+      currentY += (targetY - currentY) * 0.8
+      dot.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`
+      animId = requestAnimationFrame(animate)
+    }
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
+    window.addEventListener('pointerdown', handlePointerDown, { passive: true })
+    document.addEventListener('pointerleave', handlePointerLeave)
+
+    animId = requestAnimationFrame(animate)
+
+    return () => {
+      cancelAnimationFrame(animId)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('pointerleave', handlePointerLeave)
+      root.classList.remove('has-custom-cursor')
+    }
+  }, [])
+
+  return (
+    <div ref={dotRef} className="cursor-dot" aria-hidden="true">
+      <img src="/assets/figma-cursor.svg" alt="" width={20} height={22} draggable={false} />
+    </div>
+  )
+}
+
 function GoogleMeetIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 19 16" fill="none">
@@ -124,38 +294,79 @@ function ActionButton({
   children: string
   className?: string
 }) {
-  const classes = `action-button${className ? ` ${className}` : ''}`
+  const buttonRef = useRef<HTMLButtonElement & HTMLAnchorElement>(null)
   const reduceMotion = useReducedMotion()
-  const sharedMotionProps = {
-    className: classes,
-    whileHover: reduceMotion ? undefined : { y: -3, scale: 1.01, transition: { duration: 0.2 } },
-    whileTap: reduceMotion ? undefined : { scale: 0.98 },
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const btn = buttonRef.current
+    if (!btn) return
+    const rect = btn.getBoundingClientRect()
+    const mx = e.clientX - rect.left
+    const my = e.clientY - rect.top
+    btn.style.setProperty('--mx', `${mx}px`)
+    btn.style.setProperty('--my', `${my}px`)
+
+    if (!reduceMotion) {
+      const tx = ((mx - rect.width / 2) / (rect.width / 2)) * 3
+      const ty = ((my - rect.height / 2) / (rect.height / 2)) * 2
+      btn.style.setProperty('--tx', `${tx}px`)
+      btn.style.setProperty('--ty', `${ty}px`)
+    }
   }
+
+  const handleReset = () => {
+    const btn = buttonRef.current
+    if (!btn) return
+    btn.style.setProperty('--tx', '0px')
+    btn.style.setProperty('--ty', '0px')
+  }
+
+  const classes = `action-button magnetic-button${className ? ` ${className}` : ''}`
+
+  const content = (
+    <>
+      <span className="magnetic-button__bg" aria-hidden="true" />
+      <span className="magnetic-button__content">
+        {kind === 'call' ? (
+          <GoogleMeetIcon />
+        ) : (
+          <img src="/assets/social-icon.svg" alt="" aria-hidden="true" width={20} height={20} />
+        )}
+        <span>{children}</span>
+      </span>
+    </>
+  )
 
   if (kind === 'call') {
     return (
-      <motion.button
-        {...sharedMotionProps}
+      <button
+        ref={buttonRef as React.RefObject<HTMLButtonElement>}
+        className={classes}
         data-cal-link={CAL_LINK}
         data-cal-config='{"layout":"month_view"}'
         type="button"
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handleReset}
+        onBlur={handleReset}
       >
-        <GoogleMeetIcon />
-        <span>{children}</span>
-      </motion.button>
+        {content}
+      </button>
     )
   }
 
   return (
-    <motion.a
-      {...sharedMotionProps}
+    <a
+      ref={buttonRef as React.RefObject<HTMLAnchorElement>}
+      className={classes}
       href={WHATSAPP_LINK}
       target="_blank"
       rel="noopener noreferrer"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handleReset}
+      onBlur={handleReset}
     >
-      <img src="/assets/social-icon.svg" alt="" aria-hidden="true" width={20} height={20} />
-      <span>{children}</span>
-    </motion.a>
+      {content}
+    </a>
   )
 }
 
@@ -632,6 +843,8 @@ function App() {
       className={`portfolio${showStickyCtas ? ' has-mobile-sticky-ctas' : ''}`}
       onWheel={isMobileLayout ? undefined : handleWheelScroll}
     >
+      <SoundEffects />
+      <CustomCursor />
       <Container className="portfolio-inner">
         <Profile onCopyEmail={showToast} />
         <section id="works" className="work" aria-label="Selected work">
