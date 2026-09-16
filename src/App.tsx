@@ -530,12 +530,11 @@ function MultiplayerCursors() {
         >
           <FigmaCursorSvg color={peer.color} />
           {peer.chat ? (
-            <div className="multiplayer-cursor__chat" style={{ borderColor: peer.color }}>
-              <span>💬</span>
+            <div className="multiplayer-cursor__chat">
               <span>{peer.chat}</span>
             </div>
           ) : (
-            <div className="multiplayer-cursor__label" style={{ backgroundColor: peer.color }}>
+            <div className="multiplayer-cursor__label">
               {peer.name}
             </div>
           )}
@@ -551,14 +550,15 @@ function MultiplayerCursors() {
             ['--my-cursor-color' as string]: myColor,
           }}
         >
-          <form onSubmit={handleChatSubmit}>
+          <FigmaCursorSvg color={myColor} />
+          <form onSubmit={handleChatSubmit} style={{ display: 'inline-block' }}>
             <input
               ref={inputRef}
               type="text"
               className="figma-chat-input"
               value={chatText}
               onChange={handleChatChange}
-              placeholder="Say something... (Enter to send, Esc to close)"
+              placeholder="Say something..."
               maxLength={80}
             />
           </form>
@@ -574,8 +574,8 @@ function MultiplayerCursors() {
             ['--peer-color' as string]: myColor,
           }}
         >
-          <div className="multiplayer-cursor__chat" style={{ borderColor: myColor }}>
-            <span>💬</span>
+          <FigmaCursorSvg color={myColor} />
+          <div className="multiplayer-cursor__chat">
             <span>{committedChat}</span>
           </div>
         </div>
