@@ -50,59 +50,6 @@ function Container({ children, className = '' }: { children: ReactNode; classNam
   )
 }
 
-function HighFiveButton() {
-  const [count, setCount] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('imran_high_fives')
-      return saved ? parseInt(saved, 10) : 48
-    }
-    return 48
-  })
-  const [bursts, setBursts] = useState<Array<{ id: number; emoji: string; x: number }>>([])
-
-  const handleClick = () => {
-    const newCount = count + 1
-    setCount(newCount)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('imran_high_fives', newCount.toString())
-    }
-
-    const emojis = ['🙌', '✨', '⚡️', '🔥', '💖']
-    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)]
-    const randomX = (Math.random() - 0.5) * 40
-    const newBurst = { id: Date.now() + Math.random(), emoji: randomEmoji, x: randomX }
-
-    setBursts((prev) => [...prev, newBurst])
-
-    setTimeout(() => {
-      setBursts((prev) => prev.filter((b) => b.id !== newBurst.id))
-    }, 1000)
-  }
-
-  return (
-    <div className="high-five-container">
-      <button type="button" className="high-five-btn" onClick={handleClick} title="Send a high five!">
-        <span>🙌</span>
-        <span className="high-five-btn__count">{count}</span>
-      </button>
-      <AnimatePresence>
-        {bursts.map((burst) => (
-          <motion.span
-            key={burst.id}
-            className="floating-emoji"
-            initial={{ opacity: 1, y: 0, x: burst.x, scale: 0.8 }}
-            animate={{ opacity: 0, y: -45, x: burst.x * 1.4, scale: 1.3 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.85, ease: 'easeOut' }}
-          >
-            {burst.emoji}
-          </motion.span>
-        ))}
-      </AnimatePresence>
-    </div>
-  )
-}
-
 function SocialLinks({ onCopyEmail }: { onCopyEmail: (msg: string) => void }) {
   const reduceMotion = useReducedMotion()
 
@@ -140,74 +87,7 @@ function SocialLinks({ onCopyEmail }: { onCopyEmail: (msg: string) => void }) {
           {label}
         </motion.a>
       ))}
-      <HighFiveButton />
     </motion.nav>
-  )
-}
-
-const philosophyItems = [
-  '✨ Crafting zero-friction digital experiences',
-  '🚀 Helping founders ship high-craft products',
-  '🧠 Human-centered AI & intuitive interface UX',
-  '🎨 Pixel-perfect precision & micro-interactions',
-]
-
-function PhilosophyTicker() {
-  const items = [...philosophyItems, ...philosophyItems, ...philosophyItems]
-
-  return (
-    <div className="philosophy-ticker" aria-hidden="true">
-      <div className="philosophy-ticker__track">
-        {items.map((item, idx) => (
-          <span key={idx} className="philosophy-ticker__item">
-            <span>{item}</span>
-            <span className="philosophy-ticker__sep">•</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function useDhakaTime() {
-  const [timeStr, setTimeStr] = useState('')
-
-  useEffect(() => {
-    const updateTime = () => {
-      try {
-        const formatted = new Intl.DateTimeFormat('en-US', {
-          timeZone: 'Asia/Dhaka',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-        }).format(new Date())
-        setTimeStr(formatted)
-      } catch {
-        setTimeStr('')
-      }
-    }
-    updateTime()
-    const timer = setInterval(updateTime, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  return timeStr
-}
-
-function LiveStatusBadge() {
-  const dhakaTime = useDhakaTime()
-
-  return (
-    <div className="status-badge" title="Tushar's local time in Dhaka (GMT+6)">
-      <span className="status-badge__dot" aria-hidden="true" />
-      <span className="status-badge__label">Available</span>
-      {dhakaTime ? (
-        <>
-          <span className="status-badge__sep">•</span>
-          <span className="status-badge__time">{dhakaTime}</span>
-        </>
-      ) : null}
-    </div>
   )
 }
 
@@ -217,9 +97,6 @@ function TopNav() {
       <a className="wordmark" href="#top" aria-label="Tushar Imran home">
         <img src="/assets/logo2.svg" alt="Imran logo" width={88} height={22} />
       </a>
-      <div className="header-controls">
-        <LiveStatusBadge />
-      </div>
     </div>
   )
 }
@@ -367,8 +244,6 @@ function Profile({ onCopyEmail }: { onCopyEmail: (msg: string) => void }) {
               <p>Freelancing, experimenting with AI, building <strong>Consumer Apps</strong></p>
             </section>
           </motion.div>
-
-          <PhilosophyTicker />
         </motion.section>
       </main>
 
