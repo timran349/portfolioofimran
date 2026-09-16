@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useAnimationFrame, useReducedMotion } from 'framer-motion'
 import { getCalApi } from '@calcom/embed-react'
 import { Analytics } from '@vercel/analytics/react'
@@ -285,6 +285,320 @@ function GoogleMeetIcon() {
   )
 }
 
+function WhatsAppIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M0 20L1.40583 14.8642C0.538332 13.3608 0.0824998 11.6567 0.0833332 9.90917C0.0858331 4.44583 4.53166 0 9.99414 0C12.645 0.000833333 15.1333 1.03333 17.005 2.90667C18.8758 4.78 19.9058 7.27 19.905 9.91833C19.9025 15.3825 15.4566 19.8283 9.99414 19.8283C8.33581 19.8275 6.70165 19.4117 5.25415 18.6217L0 20ZM5.49749 16.8275C6.89415 17.6567 8.22748 18.1533 9.99081 18.1542C14.5308 18.1542 18.2291 14.4592 18.2316 9.91667C18.2333 5.365 14.5525 1.675 9.99748 1.67333C5.45415 1.67333 1.75833 5.36833 1.75666 9.91C1.75583 11.7642 2.29916 13.1525 3.21166 14.605L2.37916 17.645L5.49749 16.8275ZM14.9866 12.2742C14.925 12.1708 14.76 12.1092 14.5116 11.985C14.2641 11.8608 13.0466 11.2617 12.8191 11.1792C12.5925 11.0967 12.4275 11.055 12.2616 11.3033C12.0966 11.5508 11.6216 12.1092 11.4775 12.2742C11.3333 12.4392 11.1883 12.46 10.9408 12.3358C10.6933 12.2117 9.89498 11.9508 8.94915 11.1067C8.21331 10.45 7.71582 9.63917 7.57165 9.39083C7.42748 9.14333 7.55665 9.00917 7.67998 8.88583C7.79165 8.775 7.92748 8.59667 8.05165 8.45167C8.17748 8.30833 8.21831 8.205 8.30165 8.03917C8.38415 7.87417 8.34331 7.72917 8.28082 7.605C8.21832 7.48167 7.72332 6.2625 7.51748 5.76667C7.31582 5.28417 7.11165 5.34917 6.95998 5.34167L6.48499 5.33333C6.31999 5.33333 6.05165 5.395 5.82499 5.64333C5.59832 5.89167 4.95832 6.49 4.95832 7.70917C4.95832 8.92833 5.84582 10.1058 5.96915 10.2708C6.09332 10.4358 7.71498 12.9375 10.1991 14.01C10.79 14.265 11.2516 14.4175 11.6108 14.5317C12.2041 14.72 12.7441 14.6933 13.1708 14.63C13.6466 14.5592 14.6358 14.0308 14.8425 13.4525C15.0491 12.8733 15.0491 12.3775 14.9866 12.2742Z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}
+
+const FIGMA_COLORS = [
+  '#FF5C00', // Figma Orange
+  '#0ACF83', // Figma Green
+  '#1ABCFE', // Figma Blue
+  '#F24E1E', // Figma Red
+  '#FF9000', // Figma Warm Orange
+  '#A259FF', // Figma Purple
+  '#00C6FF', // Cyan
+  '#E02020', // Crimson
+]
+
+function getRandomColor() {
+  return FIGMA_COLORS[Math.floor(Math.random() * FIGMA_COLORS.length)]
+}
+
+function getRandomVisitorName() {
+  const num = Math.floor(Math.random() * 899) + 100
+  return `Visitor #${num}`
+}
+
+type RemotePeer = {
+  id: string
+  x: number
+  y: number
+  color: string
+  name: string
+  chat: string
+  lastSeen: number
+}
+
+function FigmaCursorSvg({ color }: { color: string }) {
+  return (
+    <svg className="multiplayer-cursor__svg" width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M1.5 1.5L16 11L9.5 12.5L6.5 18.5L1.5 1.5Z"
+        fill={color}
+        stroke="#FFFFFF"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function MultiplayerCursors() {
+  const [myId] = useState(() => 'peer_' + Math.random().toString(36).substring(2, 9))
+  const [myColor] = useState(() => getRandomColor())
+  const [myName] = useState(() => getRandomVisitorName())
+  const [peers, setPeers] = useState<Record<string, RemotePeer>>({})
+
+  // Figma Cursor Chat state
+  const [chatActive, setChatActive] = useState(false)
+  const [chatText, setChatText] = useState('')
+  const [committedChat, setCommittedChat] = useState('')
+  const [myCursorPos, setMyCursorPos] = useState({ x: -100, y: -100 })
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  const channelRef = useRef<BroadcastChannel | null>(null)
+  const wsRef = useRef<WebSocket | null>(null)
+
+  useEffect(() => {
+    // 1. BroadcastChannel for local/multi-tab sync
+    try {
+      const bc = new BroadcastChannel('imran_portfolio_cursors')
+      channelRef.current = bc
+      bc.onmessage = (event) => {
+        const data = event.data
+        if (data && data.id && data.id !== myId) {
+          setPeers((prev) => ({
+            ...prev,
+            [data.id]: {
+              ...data,
+              lastSeen: Date.now(),
+            },
+          }))
+        }
+      }
+    } catch {}
+
+    // 2. Simple public WebSocket relay for live web visitors
+    try {
+      const ws = new WebSocket('wss://socketsbay.com/wss/v2/1/demo/')
+      wsRef.current = ws
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data && data.id && data.id !== myId) {
+            setPeers((prev) => ({
+              ...prev,
+              [data.id]: {
+                ...data,
+                lastSeen: Date.now(),
+              },
+            }))
+          }
+        } catch {}
+      }
+    } catch {}
+
+    // Cleanup inactive peers every 3 seconds
+    const interval = setInterval(() => {
+      const now = Date.now()
+      setPeers((prev) => {
+        let changed = false
+        const next: Record<string, RemotePeer> = {}
+        for (const [id, peer] of Object.entries(prev)) {
+          if (now - peer.lastSeen < 6000) {
+            next[id] = peer
+          } else {
+            changed = true
+          }
+        }
+        return changed ? next : prev
+      })
+    }, 3000)
+
+    return () => {
+      clearInterval(interval)
+      try {
+        channelRef.current?.close()
+      } catch {}
+      try {
+        wsRef.current?.close()
+      } catch {}
+    }
+  }, [myId])
+
+  // Broadcast position & chat state
+  const broadcast = useCallback(
+    (x: number, y: number, chat: string) => {
+      const msg = {
+        id: myId,
+        x,
+        y,
+        color: myColor,
+        name: myName,
+        chat,
+        lastSeen: Date.now(),
+      }
+
+      try {
+        channelRef.current?.postMessage(msg)
+      } catch {}
+
+      try {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify(msg))
+        }
+      } catch {}
+    },
+    [myId, myColor, myName]
+  )
+
+  // Track mouse movement
+  useEffect(() => {
+    let lastTime = 0
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = e.clientX
+      const y = e.clientY
+      setMyCursorPos({ x, y })
+
+      const now = Date.now()
+      if (now - lastTime > 40) {
+        lastTime = now
+        broadcast(x, y, chatText || committedChat)
+      }
+    }
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [broadcast, chatText, committedChat])
+
+  // Figma '/' hotkey listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && !chatActive) {
+        const active = document.activeElement
+        const isInput =
+          active instanceof HTMLInputElement ||
+          active instanceof HTMLTextAreaElement ||
+          active?.getAttribute('contenteditable') === 'true'
+
+        if (!isInput) {
+          e.preventDefault()
+          setChatActive(true)
+          setChatText('')
+          playTone('nav')
+          setTimeout(() => inputRef.current?.focus(), 20)
+        }
+      } else if (e.key === 'Escape' && chatActive) {
+        setChatActive(false)
+        setChatText('')
+        broadcast(myCursorPos.x, myCursorPos.y, '')
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [chatActive, broadcast, myCursorPos])
+
+  const handleChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (chatText.trim()) {
+      setCommittedChat(chatText)
+      broadcast(myCursorPos.x, myCursorPos.y, chatText)
+      setTimeout(() => {
+        setCommittedChat('')
+        broadcast(myCursorPos.x, myCursorPos.y, '')
+      }, 4500)
+    }
+    setChatActive(false)
+    setChatText('')
+  }
+
+  const handleChatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setChatText(val)
+    broadcast(myCursorPos.x, myCursorPos.y, val)
+  }
+
+  return (
+    <>
+      {/* Remote visitor cursors */}
+      {Object.values(peers).map((peer) => (
+        <div
+          key={peer.id}
+          className="multiplayer-cursor"
+          style={{
+            transform: `translate3d(${peer.x}px, ${peer.y}px, 0)`,
+            ['--peer-color' as string]: peer.color,
+          }}
+        >
+          <FigmaCursorSvg color={peer.color} />
+          {peer.chat ? (
+            <div className="multiplayer-cursor__chat" style={{ borderColor: peer.color }}>
+              <span>💬</span>
+              <span>{peer.chat}</span>
+            </div>
+          ) : (
+            <div className="multiplayer-cursor__label" style={{ backgroundColor: peer.color }}>
+              {peer.name}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Local Figma Chat Input attached to local cursor */}
+      {chatActive && (
+        <div
+          className="figma-chat-input-wrapper"
+          style={{
+            transform: `translate3d(${myCursorPos.x}px, ${myCursorPos.y}px, 0)`,
+            ['--my-cursor-color' as string]: myColor,
+          }}
+        >
+          <form onSubmit={handleChatSubmit}>
+            <input
+              ref={inputRef}
+              type="text"
+              className="figma-chat-input"
+              value={chatText}
+              onChange={handleChatChange}
+              placeholder="Say something... (Enter to send, Esc to close)"
+              maxLength={80}
+            />
+          </form>
+        </div>
+      )}
+
+      {/* Floating local cursor chat message */}
+      {!chatActive && committedChat && (
+        <div
+          className="multiplayer-cursor"
+          style={{
+            transform: `translate3d(${myCursorPos.x}px, ${myCursorPos.y}px, 0)`,
+            ['--peer-color' as string]: myColor,
+          }}
+        >
+          <div className="multiplayer-cursor__chat" style={{ borderColor: myColor }}>
+            <span>💬</span>
+            <span>{committedChat}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Figma Chat Hint at bottom right */}
+      <div
+        className="figma-chat-hint"
+        onClick={() => {
+          setChatActive(true)
+          setChatText('')
+          setTimeout(() => inputRef.current?.focus(), 20)
+        }}
+        title="Press / on your keyboard to open Figma cursor chat"
+      >
+        <span>Press</span>
+        <kbd>/</kbd>
+        <span>to cursor chat</span>
+      </div>
+    </>
+  )
+}
+
 function ActionButton({
   kind,
   children,
@@ -330,7 +644,7 @@ function ActionButton({
         {kind === 'call' ? (
           <GoogleMeetIcon />
         ) : (
-          <img src="/assets/social-icon.svg" alt="" aria-hidden="true" width={20} height={20} />
+          <WhatsAppIcon className="whatsapp-icon" />
         )}
         <span>{children}</span>
       </span>
@@ -845,6 +1159,7 @@ function App() {
     >
       <SoundEffects />
       <CustomCursor />
+      <MultiplayerCursors />
       <Container className="portfolio-inner">
         <Profile onCopyEmail={showToast} />
         <section id="works" className="work" aria-label="Selected work">
