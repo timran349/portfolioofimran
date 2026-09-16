@@ -15,18 +15,28 @@ type PortfolioProject = {
   image: string
   width: number
   height: number
+  tags?: string[]
 }
 
 const projects: PortfolioProject[] = [
-  { title: 'Founders Mine App', image: '/assets/1 Founders Mine App.png', width: 2560, height: 1920 },
-  { title: 'Yorble - Smart Email Ai App', image: '/assets/2 Yorble - Smart Email Ai App.png', width: 2560, height: 1920 },
-  { title: 'Smart Alarm App', image: '/assets/3 Smart Alarm App.png', width: 2560, height: 1920 },
-  { title: 'Nano - Tasks', image: '/assets/4 Nano - Tasks.png', width: 2560, height: 1920 },
-  { title: 'Onboarding - Mood app', image: '/assets/5 Onboarding - Mood app.png', width: 2560, height: 1920 },
-  { title: 'Crypto Trading - Wallet App', image: '/assets/6 Crypto Trading - Wallet App.png', width: 2560, height: 1920 },
-  { title: 'Whisk - Recipe Maker App', image: '/assets/7 Whisk - Recipe Maker App.png', width: 2560, height: 1920 },
-  { title: 'Nano - Dashboard', image: '/assets/8 Nano - Dashboard.png', width: 2560, height: 1920 },
-  { title: 'Skill-Up Learning App', image: '/assets/9 Skill-Up Learning App.png', width: 2560, height: 1920 },
+  { title: 'Founders Mine App', image: '/assets/1 Founders Mine App.png', width: 2560, height: 1920, tags: ['Mobile App', 'Figma', '2025'] },
+  { title: 'Yorble - Smart Email Ai App', image: '/assets/2 Yorble - Smart Email Ai App.png', width: 2560, height: 1920, tags: ['AI UX', 'SaaS', '2025'] },
+  { title: 'Smart Alarm App', image: '/assets/3 Smart Alarm App.png', width: 2560, height: 1920, tags: ['Mobile UX', 'Micro-interactions'] },
+  { title: 'Nano - Tasks', image: '/assets/4 Nano - Tasks.png', width: 2560, height: 1920, tags: ['Productivity', 'iOS UI'] },
+  { title: 'Onboarding - Mood app', image: '/assets/5 Onboarding - Mood app.png', width: 2560, height: 1920, tags: ['Onboarding Flow', 'UX Research'] },
+  { title: 'Crypto Trading - Wallet App', image: '/assets/6 Crypto Trading - Wallet App.png', width: 2560, height: 1920, tags: ['Fintech', 'Design System'] },
+  { title: 'Whisk - Recipe Maker App', image: '/assets/7 Whisk - Recipe Maker App.png', width: 2560, height: 1920, tags: ['Consumer App', 'Mobile UI'] },
+  { title: 'Nano - Dashboard', image: '/assets/8 Nano - Dashboard.png', width: 2560, height: 1920, tags: ['Dashboard', 'Analytics UI'] },
+  { title: 'Skill-Up Learning App', image: '/assets/9 Skill-Up Learning App.png', width: 2560, height: 1920, tags: ['EdTech', 'Product Design'] },
+  { title: 'Financely App', image: '/assets/10 Financely App.png', width: 2560, height: 1920, tags: ['Fintech', 'Mobile App'] },
+  { title: 'Energy App', image: '/assets/11 Energy Shot.png', width: 2560, height: 1920, tags: ['Clean Energy', 'Mobile UI'] },
+  { title: 'Carbon Dashboard', image: '/assets/12 Carbon Shot.png', width: 2560, height: 1920, tags: ['Sustainability', 'Analytics'] },
+  { title: 'Fashion Ecommerce', image: '/assets/13 Fashion Shot.png', width: 2560, height: 1920, tags: ['Ecommerce', 'Web UI'] },
+  { title: 'Fashion Mobile App', image: '/assets/14 Fashion Shot Mobile.png', width: 2560, height: 1920, tags: ['Ecommerce', 'Mobile App'] },
+  { title: 'Cairo Bank App', image: '/assets/15 Cairo Bank Shot.png', width: 2560, height: 1920, tags: ['Fintech', 'Banking UI'] },
+  { title: 'Vault Security App', image: '/assets/16 Vault App.png', width: 2560, height: 1920, tags: ['Security', 'Mobile UI'] },
+  { title: 'Banking Dashboard', image: '/assets/17 Bangking Dashboard.png', width: 2560, height: 1920, tags: ['Fintech', 'Dashboard'] },
+  { title: 'AI Personal Assistant', image: '/assets/18 Ai Personal Assistant Shot.png', width: 2560, height: 1920, tags: ['AI UX', 'Mobile App'] },
 ]
 
 const CAL_LINK = 'https://cal.com/timran/meeting-with-imran'
@@ -40,8 +50,73 @@ function Container({ children, className = '' }: { children: ReactNode; classNam
   )
 }
 
-function SocialLinks() {
+function HighFiveButton() {
+  const [count, setCount] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('imran_high_fives')
+      return saved ? parseInt(saved, 10) : 48
+    }
+    return 48
+  })
+  const [bursts, setBursts] = useState<Array<{ id: number; emoji: string; x: number }>>([])
+
+  const handleClick = () => {
+    const newCount = count + 1
+    setCount(newCount)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('imran_high_fives', newCount.toString())
+    }
+
+    const emojis = ['🙌', '✨', '⚡️', '🔥', '💖']
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)]
+    const randomX = (Math.random() - 0.5) * 40
+    const newBurst = { id: Date.now() + Math.random(), emoji: randomEmoji, x: randomX }
+
+    setBursts((prev) => [...prev, newBurst])
+
+    setTimeout(() => {
+      setBursts((prev) => prev.filter((b) => b.id !== newBurst.id))
+    }, 1000)
+  }
+
+  return (
+    <div className="high-five-container">
+      <button type="button" className="high-five-btn" onClick={handleClick} title="Send a high five!">
+        <span>🙌</span>
+        <span className="high-five-btn__count">{count}</span>
+      </button>
+      <AnimatePresence>
+        {bursts.map((burst) => (
+          <motion.span
+            key={burst.id}
+            className="floating-emoji"
+            initial={{ opacity: 1, y: 0, x: burst.x, scale: 0.8 }}
+            animate={{ opacity: 0, y: -45, x: burst.x * 1.4, scale: 1.3 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.85, ease: 'easeOut' }}
+          >
+            {burst.emoji}
+          </motion.span>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function SocialLinks({ onCopyEmail }: { onCopyEmail: (msg: string) => void }) {
   const reduceMotion = useReducedMotion()
+
+  const handleClickLink = (e: React.MouseEvent<HTMLAnchorElement>, label: string, href: string) => {
+    if (label === 'Email') {
+      e.preventDefault()
+      const email = 'tusharimran092@gmail.com'
+      navigator.clipboard.writeText(email).then(() => {
+        onCopyEmail('Copied email to clipboard! 📋✨')
+      }).catch(() => {
+        window.location.href = href
+      })
+    }
+  }
 
   return (
     <motion.nav
@@ -58,13 +133,81 @@ function SocialLinks() {
           target={href.startsWith('http') ? '_blank' : undefined}
           rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
           download={download}
+          onClick={(e) => handleClickLink(e, label, href)}
           whileHover={reduceMotion ? undefined : { y: -2, opacity: 0.75, transition: { duration: 0.2 } }}
           whileTap={reduceMotion ? undefined : { scale: 0.97 }}
         >
           {label}
         </motion.a>
       ))}
+      <HighFiveButton />
     </motion.nav>
+  )
+}
+
+const philosophyItems = [
+  '✨ Crafting zero-friction digital experiences',
+  '🚀 Helping founders ship high-craft products',
+  '🧠 Human-centered AI & intuitive interface UX',
+  '🎨 Pixel-perfect precision & micro-interactions',
+]
+
+function PhilosophyTicker() {
+  const items = [...philosophyItems, ...philosophyItems, ...philosophyItems]
+
+  return (
+    <div className="philosophy-ticker" aria-hidden="true">
+      <div className="philosophy-ticker__track">
+        {items.map((item, idx) => (
+          <span key={idx} className="philosophy-ticker__item">
+            <span>{item}</span>
+            <span className="philosophy-ticker__sep">•</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function useDhakaTime() {
+  const [timeStr, setTimeStr] = useState('')
+
+  useEffect(() => {
+    const updateTime = () => {
+      try {
+        const formatted = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'Asia/Dhaka',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        }).format(new Date())
+        setTimeStr(formatted)
+      } catch {
+        setTimeStr('')
+      }
+    }
+    updateTime()
+    const timer = setInterval(updateTime, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return timeStr
+}
+
+function LiveStatusBadge() {
+  const dhakaTime = useDhakaTime()
+
+  return (
+    <div className="status-badge" title="Tushar's local time in Dhaka (GMT+6)">
+      <span className="status-badge__dot" aria-hidden="true" />
+      <span className="status-badge__label">Available</span>
+      {dhakaTime ? (
+        <>
+          <span className="status-badge__sep">•</span>
+          <span className="status-badge__time">{dhakaTime}</span>
+        </>
+      ) : null}
+    </div>
   )
 }
 
@@ -74,6 +217,9 @@ function TopNav() {
       <a className="wordmark" href="#top" aria-label="Tushar Imran home">
         <img src="/assets/logo2.svg" alt="Imran logo" width={88} height={22} />
       </a>
+      <div className="header-controls">
+        <LiveStatusBadge />
+      </div>
     </div>
   )
 }
@@ -156,7 +302,7 @@ function MobileStickyCtas({ visible }: { visible: boolean }) {
   )
 }
 
-function Profile() {
+function Profile({ onCopyEmail }: { onCopyEmail: (msg: string) => void }) {
   const reduceMotion = useReducedMotion()
 
   return (
@@ -221,11 +367,13 @@ function Profile() {
               <p>Freelancing, experimenting with AI, building <strong>Consumer Apps</strong></p>
             </section>
           </motion.div>
+
+          <PhilosophyTicker />
         </motion.section>
       </main>
 
       <footer className="profile-footer">
-        <SocialLinks />
+        <SocialLinks onCopyEmail={onCopyEmail} />
       </footer>
     </aside>
   )
@@ -253,7 +401,7 @@ function ProjectPanel({
   priority?: boolean
   index?: number
 }) {
-  const { title, image, width, height } = project
+  const { title, image, width, height, tags } = project
   const reduceMotion = useReducedMotion()
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -301,6 +449,15 @@ function ProjectPanel({
         onDragStart={(event) => event.preventDefault()}
         transition={springTransition}
       />
+      {tags && tags.length > 0 && (
+        <div className="project-tags">
+          {tags.map((tag) => (
+            <span key={tag} className="project-tag">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
     </motion.article>
   )
 }
@@ -417,6 +574,13 @@ function App() {
   const wheelMomentumRef = useRef(0)
   const [loopHeight, setLoopHeight] = useState(0)
   const [translateY, setTranslateY] = useState(0)
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 2500)
+  }
 
   const [activeSelection, setActiveSelection] = useState<{
     projectIndex: number
@@ -594,7 +758,7 @@ function App() {
       onWheel={isMobileLayout ? undefined : handleWheelScroll}
     >
       <Container className="portfolio-inner">
-        <Profile />
+        <Profile onCopyEmail={showToast} />
         <section id="works" className="work" aria-label="Selected work">
           <AnimatePresence mode="wait">
             <motion.div
@@ -630,6 +794,20 @@ function App() {
             instanceId={activeSelection.instanceId}
             onClose={handleCloseLightbox}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            className="toast-notification"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
+            {toastMessage}
+          </motion.div>
         )}
       </AnimatePresence>
 
