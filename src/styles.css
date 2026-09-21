@@ -20,7 +20,11 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; cursor: url('/assets/figma-cursor.svg') 5 1, auto; }
+html { scroll-behavior: smooth; }
+
+@media (pointer: fine) {
+  html { cursor: url('/assets/figma-cursor.svg') 5 1, auto; }
+}
 body { background: var(--bg); color: var(--text); margin: 0; min-width: 320px; overflow: hidden; }
 a { color: inherit; text-decoration: none; }
 
@@ -59,17 +63,17 @@ a { color: inherit; text-decoration: none; }
 .profile {
   background: transparent;
   display: flex;
-  flex: 0 0 620px;
+  flex: 0 0 540px;
   flex-direction: column;
   height: 100vh;
   min-height: 760px;
   padding: 60px 0;
   position: sticky;
   top: 0;
-  width: 620px;
+  width: 540px;
   border-right: 1px solid var(--border);
 }
-.work { flex: 1 0 0; height: 100vh; min-width: 0; overflow: hidden; padding: 0 30px; }
+.work { flex: 1 0 0; height: 100vh; min-width: 0; overflow: hidden; padding: 0 40px; }
 .profile-header {
   align-items: center;
   display: flex;
@@ -521,6 +525,14 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
+@media (pointer: coarse), (hover: none) {
+  .cursor-dot,
+  .multiplayer-cursor,
+  .spark {
+    display: none !important;
+  }
+}
+
 .cursor-dot {
   z-index: 2147483647;
   pointer-events: none;
@@ -665,7 +677,7 @@ a { color: inherit; text-decoration: none; }
   fill: #ffffff !important;
 }
 
-/* Figma Multiplayer Cursors & Figma `/` Cursor Chat */
+/* Figma Multiplayer Cursors */
 .multiplayer-cursor {
   position: fixed;
   top: 0;
@@ -695,101 +707,6 @@ a { color: inherit; text-decoration: none; }
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   letter-spacing: 0.2px;
-}
-
-.multiplayer-cursor__chat {
-  position: absolute;
-  top: 14px;
-  left: 10px;
-  background-color: var(--peer-color, #FF5C00);
-  color: #ffffff;
-  font-size: 13px;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 18px 18px 18px 4px;
-  white-space: nowrap;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  max-width: 340px;
-  animation: figmaChatPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.figma-chat-input-wrapper {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 2147483646;
-  pointer-events: auto;
-  will-change: transform;
-}
-
-.figma-chat-input {
-  background-color: var(--my-cursor-color, #FF5C00);
-  color: #ffffff;
-  font-size: 13px;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 18px 18px 18px 4px;
-  border: none;
-  outline: none;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  min-width: 180px;
-  max-width: 340px;
-  margin-top: 14px;
-  margin-left: 10px;
-  caret-color: #ffffff;
-  animation: figmaChatPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.figma-chat-input::placeholder {
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
-}
-
-.figma-chat-hint {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 9990;
-  background: var(--surface-elevated, #ffffff);
-  border: 1px solid var(--border, #ebebeb);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--muted, #888888);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  user-select: none;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.figma-chat-hint:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-sub, #d1d1d1);
-}
-
-.figma-chat-hint kbd {
-  background: var(--bg, #f2f2f2);
-  border: 1px solid var(--border, #d1d1d1);
-  border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text, #141414);
-}
-
-@keyframes figmaChatPop {
-  0% { opacity: 0; transform: scale(0.9) translateY(4px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 

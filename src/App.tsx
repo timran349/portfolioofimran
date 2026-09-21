@@ -44,7 +44,7 @@ const WHATSAPP_LINK = 'https://wa.me/+88001826381938'
 
 function Container({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`mx-auto w-full max-w-[1350px] ${className}`.trim()}>
+    <div className={`mx-auto w-full max-w-[1680px] ${className}`.trim()}>
       {children}
     </div>
   )
@@ -178,14 +178,38 @@ function SoundEffects() {
 
 function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null)
+  const [isFinePointer, setIsFinePointer] = useState(false)
 
   useEffect(() => {
+    const media = window.matchMedia('(pointer: fine)')
+    setIsFinePointer(media.matches)
+
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      setIsFinePointer(e.matches)
+    }
+
+    try {
+      media.addEventListener('change', handleMediaChange)
+    } catch {
+      media.addListener(handleMediaChange)
+    }
+
+    return () => {
+      try {
+        media.removeEventListener('change', handleMediaChange)
+      } catch {
+        media.removeListener(handleMediaChange)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isFinePointer) return
     const dot = dotRef.current
     if (!dot) return
 
-    const finePointer = window.matchMedia('(pointer: fine)').matches
     const root = document.documentElement
-    if (finePointer) root.classList.add('has-custom-cursor')
+    root.classList.add('has-custom-cursor')
 
     let targetX = window.innerWidth / 2
     let targetY = window.innerHeight / 2
@@ -213,6 +237,7 @@ function CustomCursor() {
     }
 
     const handlePointerMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
       targetX = e.clientX
       targetY = e.clientY
       if (!isMoving) {
@@ -226,6 +251,7 @@ function CustomCursor() {
     }
 
     const handlePointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
       targetX = e.clientX
       targetY = e.clientY
       if (!isMoving) {
@@ -262,7 +288,9 @@ function CustomCursor() {
       document.removeEventListener('pointerleave', handlePointerLeave)
       root.classList.remove('has-custom-cursor')
     }
-  }, [])
+  }, [isFinePointer])
+
+  if (!isFinePointer) return null
 
   return (
     <div ref={dotRef} className="cursor-dot" aria-hidden="true">
@@ -322,7 +350,6 @@ type RemotePeer = {
   y: number
   color: string
   name: string
-  chat: string
   lastSeen: number
 }
 
@@ -341,22 +368,41 @@ function FigmaCursorSvg({ color }: { color: string }) {
 }
 
 function MultiplayerCursors() {
+  const [isFinePointer, setIsFinePointer] = useState(false)
   const [myId] = useState(() => 'peer_' + Math.random().toString(36).substring(2, 9))
   const [myColor] = useState(() => getRandomColor())
   const [myName] = useState(() => getRandomVisitorName())
   const [peers, setPeers] = useState<Record<string, RemotePeer>>({})
 
-  // Figma Cursor Chat state
-  const [chatActive, setChatActive] = useState(false)
-  const [chatText, setChatText] = useState('')
-  const [committedChat, setCommittedChat] = useState('')
-  const [myCursorPos, setMyCursorPos] = useState({ x: -100, y: -100 })
-
-  const inputRef = useRef<HTMLInputElement>(null)
   const channelRef = useRef<BroadcastChannel | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
 
   useEffect(() => {
+    const media = window.matchMedia('(pointer: fine)')
+    setIsFinePointer(media.matches)
+
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      setIsFinePointer(e.matches)
+    }
+
+    try {
+      media.addEventListener('change', handleMediaChange)
+    } catch {
+      media.addListener(handleMediaChange)
+    }
+
+    return () => {
+      try {
+        media.removeEventListener('change', handleMediaChange)
+      } catch {
+        media.removeListener(handleMediaChange)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isFinePointer) return
+
     // 1. BroadcastChannel for local/multi-tab sync
     try {
       const bc = new BroadcastChannel('imran_portfolio_cursors')
@@ -421,18 +467,17 @@ function MultiplayerCursors() {
         wsRef.current?.close()
       } catch {}
     }
-  }, [myId])
+  }, [myId, isFinePointer])
 
-  // Broadcast position & chat state
+  // Broadcast position
   const broadcast = useCallback(
-    (x: number, y: number, chat: string) => {
+    (x: number, y: number) => {
       const msg = {
         id: myId,
         x,
         y,
         color: myColor,
         name: myName,
-        chat,
         lastSeen: Date.now(),
       }
 
@@ -451,70 +496,24 @@ function MultiplayerCursors() {
 
   // Track mouse movement
   useEffect(() => {
+    if (!isFinePointer) return
     let lastTime = 0
     const handleMouseMove = (e: MouseEvent) => {
       const x = e.clientX
       const y = e.clientY
-      setMyCursorPos({ x, y })
 
       const now = Date.now()
       if (now - lastTime > 40) {
         lastTime = now
-        broadcast(x, y, chatText || committedChat)
+        broadcast(x, y)
       }
     }
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [broadcast, chatText, committedChat])
+  }, [broadcast, isFinePointer])
 
-  // Figma '/' hotkey listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && !chatActive) {
-        const active = document.activeElement
-        const isInput =
-          active instanceof HTMLInputElement ||
-          active instanceof HTMLTextAreaElement ||
-          active?.getAttribute('contenteditable') === 'true'
-
-        if (!isInput) {
-          e.preventDefault()
-          setChatActive(true)
-          setChatText('')
-          playTone('nav')
-          setTimeout(() => inputRef.current?.focus(), 20)
-        }
-      } else if (e.key === 'Escape' && chatActive) {
-        setChatActive(false)
-        setChatText('')
-        broadcast(myCursorPos.x, myCursorPos.y, '')
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [chatActive, broadcast, myCursorPos])
-
-  const handleChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (chatText.trim()) {
-      setCommittedChat(chatText)
-      broadcast(myCursorPos.x, myCursorPos.y, chatText)
-      setTimeout(() => {
-        setCommittedChat('')
-        broadcast(myCursorPos.x, myCursorPos.y, '')
-      }, 4500)
-    }
-    setChatActive(false)
-    setChatText('')
-  }
-
-  const handleChatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setChatText(val)
-    broadcast(myCursorPos.x, myCursorPos.y, val)
-  }
+  if (!isFinePointer) return null
 
   return (
     <>
@@ -529,72 +528,11 @@ function MultiplayerCursors() {
           }}
         >
           <FigmaCursorSvg color={peer.color} />
-          {peer.chat ? (
-            <div className="multiplayer-cursor__chat">
-              <span>{peer.chat}</span>
-            </div>
-          ) : (
-            <div className="multiplayer-cursor__label">
-              {peer.name}
-            </div>
-          )}
-        </div>
-      ))}
-
-      {/* Local Figma Chat Input attached to local cursor */}
-      {chatActive && (
-        <div
-          className="figma-chat-input-wrapper"
-          style={{
-            transform: `translate3d(${myCursorPos.x}px, ${myCursorPos.y}px, 0)`,
-            ['--my-cursor-color' as string]: myColor,
-          }}
-        >
-          <FigmaCursorSvg color={myColor} />
-          <form onSubmit={handleChatSubmit} style={{ display: 'inline-block' }}>
-            <input
-              ref={inputRef}
-              type="text"
-              className="figma-chat-input"
-              value={chatText}
-              onChange={handleChatChange}
-              placeholder="Say something..."
-              maxLength={80}
-            />
-          </form>
-        </div>
-      )}
-
-      {/* Floating local cursor chat message */}
-      {!chatActive && committedChat && (
-        <div
-          className="multiplayer-cursor"
-          style={{
-            transform: `translate3d(${myCursorPos.x}px, ${myCursorPos.y}px, 0)`,
-            ['--peer-color' as string]: myColor,
-          }}
-        >
-          <FigmaCursorSvg color={myColor} />
-          <div className="multiplayer-cursor__chat">
-            <span>{committedChat}</span>
+          <div className="multiplayer-cursor__label">
+            {peer.name}
           </div>
         </div>
-      )}
-
-      {/* Figma Chat Hint at bottom right */}
-      <div
-        className="figma-chat-hint"
-        onClick={() => {
-          setChatActive(true)
-          setChatText('')
-          setTimeout(() => inputRef.current?.focus(), 20)
-        }}
-        title="Press / on your keyboard to open Figma cursor chat"
-      >
-        <span>Press</span>
-        <kbd>/</kbd>
-        <span>to cursor chat</span>
-      </div>
+      ))}
     </>
   )
 }
